@@ -1,19 +1,21 @@
-import { Button } from "@/components/ui/button"
+import { Navbar } from "@/components/navbar"
 
 export default function Page() {
   return (
-    <div className="flex min-h-svh p-6">
-      <div className="flex max-w-md min-w-0 flex-col gap-4 text-sm leading-loose">
-        <div>
-          <h1 className="font-medium">Project ready!</h1>
-          <p>You may now add components and start building.</p>
-          <p>We&apos;ve already added the button component for you.</p>
-          <Button className="mt-2">Button</Button>
-        </div>
-        <div className="font-mono text-xs text-muted-foreground">
-          (Press <kbd>d</kbd> to toggle dark mode)
-        </div>
-      </div>
+    <div className="min-h-screen bg-background">
+      <Navbar />
+      <main className="mx-auto flex min-h-screen max-w-7xl flex-col items-center justify-center px-4 text-center">
+        <p className="rounded-full border border-border/60 bg-muted/50 px-3 py-1 text-xs font-medium text-muted-foreground">
+          Navbar ready
+        </p>
+        <h1 className="mt-6 text-balance text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
+          Rent premium gear, <span className="text-primary">on demand</span>
+        </h1>
+        <p className="mt-4 max-w-md text-pretty text-muted-foreground leading-relaxed">
+          The navbar is in place with glassmorphism on scroll, light/dark mode, and
+          a responsive mobile menu. Sections coming next.
+        </p>
+      </main>
     </div>
   )
 }
