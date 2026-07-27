@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 
 import { ModeToggle } from "@/components/mode-toggle"
 import { Logo } from "./logo"
+import { useEffect, useState } from "react"
 
 const NAV_LINKS = [
   { label: "Browse", href: "#gear" },
@@ -19,10 +20,10 @@ const NAV_LINKS = [
 ]
 
 export function Navbar() {
-  const [scrolled, setScrolled] = React.useState(false)
-  const [open, setOpen] = React.useState(false)
+  const [scrolled, setScrolled] = useState(false)
+  const [open, setOpen] = useState(false)
 
-  React.useEffect(() => {
+  useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8)
     onScroll()
     window.addEventListener("scroll", onScroll, { passive: true })
@@ -30,7 +31,7 @@ export function Navbar() {
   }, [])
 
   // Lock body scroll while mobile menu is open
-  React.useEffect(() => {
+  useEffect(() => {
     document.body.style.overflow = open ? "hidden" : ""
     return () => {
       document.body.style.overflow = ""
@@ -47,7 +48,7 @@ export function Navbar() {
           className={cn(
             "mt-3 flex items-center justify-between gap-4 rounded-2xl border px-3 py-2.5 transition-all duration-300 sm:px-4",
             scrolled
-              ? "border-border/60 bg-background/70 shadow-lg shadow-black/5 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60"
+              ? "border-border/60 bg-background/70 shadow-lg shadow-black/5 backdrop-blur-xl supports-backdrop-blur:bg-background/90"
               : "border-transparent bg-transparent",
           )}
         >

@@ -15,10 +15,8 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'GearUp — Premium Equipment Rentals',
-  description:
-    'Rent premium equipment for any adventure or project. Cameras, drones, tools, camping gear, and more — delivered on your schedule.',
-  generator: 'v0.app',
+  title: 'GearUp',
+  description: 'GearUp is a platform that helps you find the best gear for your needs.',
   icons: {
     icon: [
       {

@@ -6,12 +6,13 @@ import { useTheme } from "next-themes"
 import { AnimatePresence, motion } from "motion/react"
 
 import { cn } from "@/lib/utils"
+import { useEffect, useState } from "react"
 
 export function ModeToggle({ className }: { className?: string }) {
   const { resolvedTheme, setTheme } = useTheme()
-  const [mounted, setMounted] = React.useState(false)
+  const [mounted, setMounted] = useState(false)
 
-  React.useEffect(() => setMounted(true), [])
+  useEffect(() => setMounted(true), [])
 
   const isDark = resolvedTheme === "dark"
 
