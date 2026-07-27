@@ -1,13 +1,15 @@
 import React from 'react'
 import LoginForm from '../_components/loginForm'
 
-const loginPage = () => {
+export default function LoginPage() {
   return (
-    <div>loginPage
-       <LoginForm/>
-        
-    </div>
-  )
-}
+    <>
+      <div className="flex min-h-screen items-center justify-center">
 
-export default loginPage
+          {/* FORM */}
+          <LoginForm />
+
+      </div>
+    </>
+  );
+}

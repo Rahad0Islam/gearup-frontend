@@ -78,7 +78,7 @@ export function Navbar() {
           <div className="hidden items-center gap-2 md:flex">
             <ModeToggle />
            <Button asChild>
-              <Link href="#">
+              <Link href="/login">
                 Sign in
               </Link>
             </Button>

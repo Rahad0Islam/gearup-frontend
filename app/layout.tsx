@@ -3,6 +3,8 @@ import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { ThemeProvider } from '@/components/theme-provider'
 import './globals.css'
+import { Navbar } from '@/components/navbar'
+import { Toaster } from '@/components/ui/sonner'
 
 const geistSans = Geist({
   subsets: ['latin'],
@@ -62,7 +64,13 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+           <Navbar />
           {children}
+           <Toaster
+          position="top-right"
+          richColors
+          closeButton
+        />
         </ThemeProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>

@@ -19,6 +19,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { useState } from "react"
+import { loginAction } from "../_actions/authAction"
+import { useRouter } from "next/navigation"
+
 
 const loginSchema = z.object({
   email: z.string().min(1, "Email is required").email("Enter a valid email"),
@@ -41,7 +45,8 @@ const item = {
 }
 
 export default function LoginForm() {
-  const [showPassword, setShowPassword] = React.useState(false)
+  const router = useRouter();
+  const [showPassword, setShowPassword] = useState(false)
 
   const {
     register,
@@ -54,12 +59,21 @@ export default function LoginForm() {
   })
 
   async function onSubmit(values: LoginValues) {
-    // Simulate an async authentication request.
-    await new Promise((resolve) => setTimeout(resolve, 1400))
-    console.log("[v0] login submit:", values.email)
-    toast.success("Welcome back", {
-      description: "You've signed in to your GearUp account.",
-    })
+  
+    
+    const loginCredentials = {
+      email: values.email,
+      password: values.password
+    }
+    const res = await loginAction(loginCredentials);
+
+    if(res.success){
+      toast.success("Welcome back");
+      router.push("/")
+    }else{
+      toast.error(res.message || "Login failed. Please try again.")
+    }
+  
   }
 
   return (
