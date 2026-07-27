@@ -69,7 +69,18 @@ export default function LoginForm() {
 
     if(res.success){
       toast.success("Welcome back");
-      router.push("/")
+
+      if(res.data.user.role === "ADMIN"){
+        router.push("/admin-dashboard")
+      }
+      else if(res.data.user.role === "CUSTOMER"){
+      router.push("/customer-dashboard")
+      }
+      else if(res.data.user.role === "PROVIDER"){
+        router.push("/provider-dashboard")
+      }
+
+      
     }else{
       toast.error(res.message || "Login failed. Please try again.")
     }

@@ -1,4 +1,6 @@
 import { Navbar } from "@/components/navbar"
+import { GearGrid } from "@/fearture/gear/components/gearGrid"
+
 
 export default function Page() {
   return (
@@ -15,7 +17,12 @@ export default function Page() {
           The navbar is in place with glassmorphism on scroll, light/dark mode, and
           a responsive mobile menu. Sections coming next.
         </p>
+
       </main>
+       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <GearGrid/>
+
+       </div>
     </div>
   )
 }
