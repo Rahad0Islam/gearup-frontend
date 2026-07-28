@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
+import { formatDistanceToNow } from "date-fns"
 
 export interface Review {
   rating: number
@@ -14,7 +15,7 @@ export interface Review {
   customer?: {
     name: string
   }
-  created_at?: string
+  createdAt?: string
 }
 
 export interface ReviewData {
@@ -68,10 +69,13 @@ function StarRating({
   )
 }
 
-/* ---------- Helpers ---------- */
+function formatReviewDate(date?: string) {
+  if (!date) return ""
 
-// const AUTHORS = ["Alex Morgan", "Jamie Lee", "Sam Rivera", "Taylor Quinn", "Jordan Blake"]
-// const DATES = ["2 days ago", "1 week ago", "3 weeks ago", "Last month", "2 months ago"]
+  return formatDistanceToNow(new Date(date), {
+    addSuffix: true,
+  })
+}
 
 function initials(name: string) {
   return name
@@ -170,7 +174,7 @@ export function ReviewSection({ data, className }: ReviewSectionProps) {
       >
         {reviews.map((review, i) => {
           const author = review.customer?.name || ""
-          const date = review.created_at
+          const date = formatReviewDate(review.createdAt)
           return (
             <motion.div
               key={i}
@@ -208,3 +212,5 @@ export function ReviewSection({ data, className }: ReviewSectionProps) {
 }
 
 export default ReviewSection
+
+
