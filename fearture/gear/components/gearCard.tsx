@@ -20,6 +20,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { useRouter } from "next/navigation"
 
 export type GearStatus = "AVAILABLE" | "UNAVAILABLE"
 
@@ -97,6 +98,8 @@ export function GearCard({
   onRentNow,
   className,
 }: GearCardProps) {
+
+  const router = useRouter();
   const hasDiscount = gear.discountPrice > 0 && gear.discountPrice < gear.rentPricePerDay
   const activePrice = hasDiscount ? (gear.rentPricePerDay - gear.discountPrice) : gear.rentPricePerDay
   const savings = hasDiscount ? gear.discountPrice : 0
@@ -177,7 +180,7 @@ export function GearCard({
           <Button
             variant="outline"
             className="w-full rounded-xl"
-            onClick={() => onViewDetails?.(gear)}
+           onClick={() => router.push(`/gear/${gear.id}`)}
           >
             <Eye className="size-4" aria-hidden="true" />
             View Details

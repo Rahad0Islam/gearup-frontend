@@ -11,8 +11,10 @@ import { cn } from "@/lib/utils"
 export interface Review {
   rating: number
   comment: string
-  author?: string
-  date?: string
+  customer?: {
+    name: string
+  }
+  created_at?: string
 }
 
 export interface ReviewData {
@@ -68,8 +70,8 @@ function StarRating({
 
 /* ---------- Helpers ---------- */
 
-const AUTHORS = ["Alex Morgan", "Jamie Lee", "Sam Rivera", "Taylor Quinn", "Jordan Blake"]
-const DATES = ["2 days ago", "1 week ago", "3 weeks ago", "Last month", "2 months ago"]
+// const AUTHORS = ["Alex Morgan", "Jamie Lee", "Sam Rivera", "Taylor Quinn", "Jordan Blake"]
+// const DATES = ["2 days ago", "1 week ago", "3 weeks ago", "Last month", "2 months ago"]
 
 function initials(name: string) {
   return name
@@ -117,7 +119,7 @@ export function ReviewSection({ data, className }: ReviewSectionProps) {
             <div className="flex flex-col items-center gap-1 sm:items-start">
               <div className="flex items-end gap-1">
                 <span className="text-5xl font-semibold tracking-tight text-foreground">
-                  {averageRating.toFixed(1)}
+                  {averageRating?.toFixed(1)}
                 </span>
                 <span className="mb-1.5 text-sm text-muted-foreground">/ 5</span>
               </div>
@@ -167,8 +169,8 @@ export function ReviewSection({ data, className }: ReviewSectionProps) {
         transition={{ staggerChildren: 0.1 }}
       >
         {reviews.map((review, i) => {
-          const author = review.author ?? AUTHORS[i % AUTHORS.length]
-          const date = review.date ?? DATES[i % DATES.length]
+          const author = review.customer?.name || ""
+          const date = review.created_at
           return (
             <motion.div
               key={i}

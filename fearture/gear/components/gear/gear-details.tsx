@@ -27,6 +27,8 @@ import {
 } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
 import { ReviewSection, type ReviewData } from "./review-section"
+import { getGearDetailsById } from "../../_actions/gearDetails.action"
+import { getReviewById } from "../../_actions/getReviewByid.action"
 
 /* ---------- Types (ready for API data) ---------- */
 
@@ -37,7 +39,6 @@ export interface GearDetail {
   name: string
   description: string
   rentPricePerDay: number
-  /** Percentage discount, e.g. 10 = 10% off */
   discountPrice: number
   stock: number
   brand: string
@@ -52,36 +53,13 @@ interface GearDetailsProps {
   className?: string
 }
 
-/* ---------- Dummy fallback data ---------- */
-
-const DUMMY_GEAR: GearDetail = {
-  id: "e9765b56-fa30-4277-9906-9e0993ebf3b6",
-  name: "Black Diamond Climbing Harness",
-  description:
-    "Lightweight climbing harness suitable for indoor and outdoor rock climbing.",
-  rentPricePerDay: 350,
-  discountPrice: 10,
-  stock: 50,
-  brand: "Black Diamond",
-  availableStock: 50,
-  status: "AVAILABLE",
-  image: "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4",
-}
-
-const DUMMY_REVIEWS: ReviewData = {
-  averageRating: 5,
-  reviews: [
-    { rating: 5, comment: "Wonderful gear. Very comfortable and high quality." },
-    { rating: 5, comment: "Amazing product. Highly recommended." },
-  ],
-}
 
 const DURATIONS = [1, 2, 3, 5, 7, 14, 30]
 
 function formatPrice(n: number) {
-  return new Intl.NumberFormat("en-IN", {
+  return new Intl.NumberFormat("en-BD", {
     style: "currency",
-    currency: "INR",
+    currency: "BDT",
     maximumFractionDigits: 0,
   }).format(n)
 }
@@ -114,11 +92,11 @@ function InlineStars({ rating }: { rating: number }) {
 
 /* ---------- Main component ---------- */
 
-export function GearDetails({
-  gear = DUMMY_GEAR,
-  reviews = DUMMY_REVIEWS,
+export  function GearDetails({
+  gear,
+  reviews,
   className,
-}: Partial<GearDetailsProps>) {
+}: GearDetailsProps) {
   const [quantity, setQuantity] = useState(1)
   const [duration, setDuration] = useState("3")
   const [wishlisted, setWishlisted] = useState(false)
@@ -126,9 +104,11 @@ export function GearDetails({
   const isAvailable = gear.status === "AVAILABLE" && gear.availableStock > 0
   const hasDiscount = gear.discountPrice > 0
   const discountedDaily = hasDiscount
-    ? Math.round(gear.rentPricePerDay * (1 - gear.discountPrice / 100))
+    ? Math.round((gear.rentPricePerDay - gear.discountPrice))
     : gear.rentPricePerDay
+    
 
+    // console.log({hasDiscount, discountedDaily,rentPricePerDay});
   const days = Number(duration)
   const total = useMemo(
     () => discountedDaily * quantity * days,
@@ -137,7 +117,7 @@ export function GearDetails({
 
   const decQty = () => setQuantity((q) => Math.max(1, q - 1))
   const incQty = () => setQuantity((q) => Math.min(gear.availableStock, q + 1))
-
+//   console.log({reviews});
   return (
     <div className={cn("w-full", className)}>
       <motion.div
@@ -164,7 +144,7 @@ export function GearDetails({
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
           {hasDiscount && (
             <Badge className="absolute left-4 top-4 bg-primary px-3 py-1 text-primary-foreground shadow-lg">
-              Save {gear.discountPrice}%
+              Save {Math.round((gear.discountPrice) / gear.rentPricePerDay * 100)}%
             </Badge>
           )}
         </motion.div>
@@ -186,7 +166,7 @@ export function GearDetails({
             <div className="mt-3 flex flex-wrap items-center gap-3">
               <InlineStars rating={reviews.averageRating} />
               <span className="text-sm font-medium text-foreground">
-                {reviews.averageRating.toFixed(1)}
+                {reviews.averageRating?.toFixed(1)}
               </span>
               <span className="text-sm text-muted-foreground">
                 ({reviews.reviews.length} reviews)
