@@ -2,16 +2,17 @@
 
 import { useMemo, useState } from "react"
 import Image from "next/image"
+import { useRouter } from "next/navigation"
 import { motion } from "motion/react"
 import {
   Star,
-  Heart,
   ShoppingCart,
   PackageCheck,
   ShieldCheck,
   CalendarDays,
   Minus,
   Plus,
+  Loader2,
 } from "lucide-react"
 
 import { Card, CardContent } from "@/components/ui/card"
@@ -27,10 +28,7 @@ import {
 } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
 import { ReviewSection, type ReviewData } from "./review-section"
-import { getGearDetailsById } from "../../_actions/gearDetails.action"
-import { getReviewById } from "../../_actions/getReviewByid.action"
-
-/* ---------- Types (ready for API data) ---------- */
+import { createRentalOrderAction } from "@/fearture/rental-order/actions/createRental.action"
 
 export type GearStatus = "AVAILABLE" | "UNAVAILABLE" | "OUT_OF_STOCK"
 
@@ -53,7 +51,6 @@ interface GearDetailsProps {
   className?: string
 }
 
-
 const DURATIONS = [1, 2, 3, 5, 7, 14, 30]
 
 function formatPrice(n: number) {
@@ -63,8 +60,6 @@ function formatPrice(n: number) {
     maximumFractionDigits: 0,
   }).format(n)
 }
-
-/* ---------- Rating summary ---------- */
 
 function InlineStars({ rating }: { rating: number }) {
   return (
@@ -90,25 +85,28 @@ function InlineStars({ rating }: { rating: number }) {
   )
 }
 
-/* ---------- Main component ---------- */
-
-export  function GearDetails({
+export function GearDetails({
   gear,
   reviews,
   className,
 }: GearDetailsProps) {
+  const router = useRouter()
+
+  // Default pickup date set to today in YYYY-MM-DD
+  const todayStr = new Date().toISOString().split("T")[0]
+  
   const [quantity, setQuantity] = useState(1)
   const [duration, setDuration] = useState("3")
-  const [wishlisted, setWishlisted] = useState(false)
+  const [pickupDate, setPickupDate] = useState(todayStr)
+  const [isLoading, setIsLoading] = useState(false)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
   const isAvailable = gear.status === "AVAILABLE" && gear.availableStock > 0
   const hasDiscount = gear.discountPrice > 0
   const discountedDaily = hasDiscount
-    ? Math.round((gear.rentPricePerDay - gear.discountPrice))
+    ? Math.round(gear.rentPricePerDay - gear.discountPrice)
     : gear.rentPricePerDay
-    
 
-    // console.log({hasDiscount, discountedDaily,rentPricePerDay});
   const days = Number(duration)
   const total = useMemo(
     () => discountedDaily * quantity * days,
@@ -117,7 +115,42 @@ export  function GearDetails({
 
   const decQty = () => setQuantity((q) => Math.max(1, q - 1))
   const incQty = () => setQuantity((q) => Math.min(gear.availableStock, q + 1))
-//   console.log({reviews});
+
+  const handleCheckout = async () => {
+    setIsLoading(true)
+    setErrorMsg(null)
+
+    try {
+      const start = new Date(pickupDate)
+      const end = new Date(start.getTime() + days * 24 * 60 * 60 * 1000)
+
+      const payload = {
+        pickupDate: start.toISOString(),
+        returnDate: end.toISOString(),
+        items: [
+          {
+            gearItemId: gear.id,
+            quantity: quantity,
+          },
+        ],
+      }
+
+      const res = await createRentalOrderAction(payload)
+
+      if (res.success || res.statuscode === 201) {
+        // Direct to Customer Dashboard Rentals page
+        router.push("/customer-dashboard/rental")
+      } else {
+        setErrorMsg(res.message || "Failed to create rental order. Please try again.")
+      }
+    } catch (err) {
+      console.error("Order creation failed", err)
+      setErrorMsg("Something went wrong. Please try again.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   return (
     <div className={cn("w-full", className)}>
       <motion.div
@@ -144,7 +177,7 @@ export  function GearDetails({
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
           {hasDiscount && (
             <Badge className="absolute left-4 top-4 bg-primary px-3 py-1 text-primary-foreground shadow-lg">
-              Save {Math.round((gear.discountPrice) / gear.rentPricePerDay * 100)}%
+              Save {Math.round((gear.discountPrice / gear.rentPricePerDay) * 100)}%
             </Badge>
           )}
         </motion.div>
@@ -169,7 +202,7 @@ export  function GearDetails({
                 {reviews.averageRating?.toFixed(1)}
               </span>
               <span className="text-sm text-muted-foreground">
-                ({reviews.reviews.length} reviews)
+                ({reviews.reviews?.length || 0} reviews)
               </span>
             </div>
 
@@ -216,24 +249,21 @@ export  function GearDetails({
               </span>
             </div>
 
-            {/* Primary actions (mobile / non-sticky) */}
+            {/* Primary action (Mobile view) */}
             <div className="mt-6 flex gap-3 lg:hidden">
-              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} className="flex-1">
-                <Button size="lg" disabled={!isAvailable} className="w-full gap-2">
-                  <ShoppingCart className="size-4" /> Rent Now
-                </Button>
-              </motion.div>
-              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  onClick={() => setWishlisted((w) => !w)}
-                  className="gap-2"
-                >
-                  <Heart className={cn("size-4", wishlisted && "fill-primary text-primary")} />
-                  <span className="sr-only sm:not-sr-only">Wishlist</span>
-                </Button>
-              </motion.div>
+              <Button
+                size="lg"
+                disabled={!isAvailable || isLoading}
+                onClick={handleCheckout}
+                className="w-full gap-2"
+              >
+                {isLoading ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <ShoppingCart className="size-4" />
+                )}
+                {isLoading ? "Processing..." : "Rent Now"}
+              </Button>
             </div>
           </motion.div>
 
@@ -259,6 +289,18 @@ export  function GearDetails({
 
                 <Separator />
 
+                {/* Pickup Date */}
+                <div className="flex items-center justify-between gap-4">
+                  <span className="text-sm font-medium text-foreground">Pickup Date</span>
+                  <input
+                    type="date"
+                    min={todayStr}
+                    value={pickupDate}
+                    onChange={(e) => setPickupDate(e.target.value)}
+                    className="h-9 w-36 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  />
+                </div>
+
                 {/* Quantity */}
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-foreground">Quantity</span>
@@ -268,7 +310,7 @@ export  function GearDetails({
                       variant="ghost"
                       className="size-8 rounded-full"
                       onClick={decQty}
-                      disabled={quantity <= 1}
+                      disabled={quantity <= 1 || isLoading}
                       aria-label="Decrease quantity"
                     >
                       <Minus className="size-4" />
@@ -281,7 +323,7 @@ export  function GearDetails({
                       variant="ghost"
                       className="size-8 rounded-full"
                       onClick={incQty}
-                      disabled={quantity >= gear.availableStock}
+                      disabled={quantity >= gear.availableStock || isLoading}
                       aria-label="Increase quantity"
                     >
                       <Plus className="size-4" />
@@ -292,7 +334,7 @@ export  function GearDetails({
                 {/* Duration */}
                 <div className="flex items-center justify-between gap-4">
                   <span className="text-sm font-medium text-foreground">Rental duration</span>
-                  <Select value={duration} onValueChange={setDuration}>
+                  <Select value={duration} onValueChange={setDuration} disabled={isLoading}>
                     <SelectTrigger className="h-9 w-32">
                       <SelectValue />
                     </SelectTrigger>
@@ -326,22 +368,25 @@ export  function GearDetails({
                   </motion.span>
                 </div>
 
-                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}>
-                  <Button size="lg" disabled={!isAvailable} className="w-full gap-2">
-                    <ShoppingCart className="size-4" />
-                    Continue to Checkout
-                  </Button>
-                </motion.div>
+                {errorMsg && (
+                  <p className="text-xs text-destructive font-medium text-center">
+                    {errorMsg}
+                  </p>
+                )}
 
                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}>
                   <Button
                     size="lg"
-                    variant="outline"
-                    onClick={() => setWishlisted((w) => !w)}
+                    disabled={!isAvailable || isLoading}
+                    onClick={handleCheckout}
                     className="w-full gap-2"
                   >
-                    <Heart className={cn("size-4", wishlisted && "fill-primary text-primary")} />
-                    {wishlisted ? "Added to Wishlist" : "Add to Wishlist"}
+                    {isLoading ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : (
+                      <ShoppingCart className="size-4" />
+                    )}
+                    {isLoading ? "Creating Order..." : "Continue to Checkout"}
                   </Button>
                 </motion.div>
               </CardContent>

@@ -85,22 +85,7 @@ export default function NavbarClient({ user }: ProfileDropdownProps) {
             ))}
           </nav>
 
-          {/* Desktop actions */}
-          {/* <div className="hidden items-center gap-2 md:flex">
-            <ModeToggle />
-           <Button asChild>
-              <Link href="/login">
-                Sign in
-              </Link>
-            </Button>
-
-
-            <Button size="lg" asChild>
-              <Link href="#">
-                List your gear
-              </Link>
-            </Button>
-          </div> */}
+          
           <div className="hidden items-center gap-2 md:flex">
   <ModeToggle />
 

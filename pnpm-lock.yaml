@@ -26,6 +26,9 @@ importers:
       dotenv:
         specifier: ^17.4.2
         version: 17.4.2
+      framer-motion:
+        specifier: ^12.42.2
+        version: 12.42.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       lucide-react:
         specifier: ^1.26.0
         version: 1.26.0(react@19.2.4)
