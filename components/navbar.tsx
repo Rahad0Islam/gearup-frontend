@@ -13,11 +13,12 @@ import { Logo } from "./logo"
 import { useEffect, useState } from "react"
 
 const NAV_LINKS = [
-  { label: "Browse", href: "#gear" },
+  { label: "Gear", href: "/gear" },
   { label: "Categories", href: "#categories" },
   { label: "How it works", href: "#how-it-works" },
   { label: "Reviews", href: "#reviews" },
 ]
+
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false)
