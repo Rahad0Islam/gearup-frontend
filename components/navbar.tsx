@@ -13,6 +13,7 @@ import { Logo } from "./logo"
 import { useEffect, useState } from "react"
 
 const NAV_LINKS = [
+  { label: "Home", href: "/" },
   { label: "Gear", href: "/gear" },
   { label: "Categories", href: "#categories" },
   { label: "How it works", href: "#how-it-works" },
