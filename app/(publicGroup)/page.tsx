@@ -1,4 +1,4 @@
-import { Navbar } from "@/components/navbar"
+
 import { GearGrid } from "@/fearture/gear/components/gearGrid"
 
 
