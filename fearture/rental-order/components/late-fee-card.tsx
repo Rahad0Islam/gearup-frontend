@@ -58,14 +58,14 @@ export function LateFeeCard({
           <div>
             <span className="block text-[10px] text-slate-500 dark:text-slate-400">Fee Rate</span>
             <span className="text-xs font-bold text-slate-900 dark:text-slate-100 mt-0.5 block">
-              £{(lateFee / lateDays).toFixed(0)}/d
+              BDT  {(lateFee / lateDays).toFixed(0)}/d
             </span>
           </div>
 
           <div>
             <span className="block text-[10px] text-slate-500 dark:text-slate-400">Balance</span>
             <span className="text-xs font-extrabold text-orange-600 dark:text-orange-400 mt-0.5 block">
-              £{lateFee}
+              BDT  {lateFee}
             </span>
           </div>
         </div>
@@ -76,7 +76,7 @@ export function LateFeeCard({
             onClick={() => setDialogOpen(true)}
             className="w-full bg-orange-600 hover:bg-orange-700 text-white text-xs font-semibold rounded-xl gap-2 shadow-md shadow-orange-600/20"
           >
-            <CreditCard className="size-3.5" /> Pay Late Fee (£{lateFee})
+            <CreditCard className="size-3.5" /> Pay Late Fee (BDT  {lateFee})
           </Button>
         </div>
       </motion.div>

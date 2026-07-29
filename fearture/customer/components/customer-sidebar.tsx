@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation"
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Menu } from "lucide-react"
+
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import {
@@ -92,6 +93,27 @@ function SidebarContent({ onClose, navigationItems, role }: SidebarContentProps)
   const pathname = usePathname()
   const headerInfo = ROLE_HEADER_INFO[role] || ROLE_HEADER_INFO.CUSTOMER
 
+  // Base overview routes that require exact matching
+  const baseOverviewRoutes = [
+    "/customer-dashboard",
+    "/dashboard/provider",
+    "/dashboard/admin",
+  ]
+
+  // 1. Determine exactly ONE active item from the list
+  const activeNavItem =
+    // First, check for an exact pathname match
+    navigationItems.find((item) => item.route === pathname) ||
+    // Second, check for sub-route matches (excluding base overview paths)
+    navigationItems.find(
+      (item) =>
+        !baseOverviewRoutes.includes(item.route) &&
+        item.route !== "" &&
+        pathname.startsWith(`${item.route}/`)
+    )
+
+  const activeRoute = activeNavItem?.route
+
   return (
     <motion.div
       variants={sidebarVariants}
@@ -126,8 +148,8 @@ function SidebarContent({ onClose, navigationItems, role }: SidebarContentProps)
       >
         {navigationItems.map((item) => {
           const Icon = item.icon
-          const isActive =
-            pathname === item.route || pathname.startsWith(`${item.route}/`)
+          // Strict single-item equality check
+          const isActive = activeRoute === item.route
 
           return (
             <motion.div key={item.route} variants={itemVariants}>
@@ -138,7 +160,7 @@ function SidebarContent({ onClose, navigationItems, role }: SidebarContentProps)
                   whileTap={{ scale: 0.98 }}
                   className={`w-full flex items-start gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
                     isActive
-                      ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 dark:bg-emerald-500/15 font-medium"
+                      ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 dark:bg-emerald-500/15 font-semibold"
                       : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900/50"
                   }`}
                 >
@@ -211,10 +233,7 @@ export function CustomerSidebar({ role }: Props) {
             key="sidebar"
             className="fixed left-0 top-20 h-[calc(100vh-5rem)] w-80 z-30"
           >
-            <SidebarContent
-              navigationItems={navigationItems}
-              role={role}
-            />
+            <SidebarContent navigationItems={navigationItems} role={role} />
           </motion.div>
         </AnimatePresence>
       </div>

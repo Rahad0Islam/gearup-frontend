@@ -47,7 +47,7 @@ export function RentalList({ initialOrders = [] }: RentalListProps) {
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase()
         const gearName = order.rentalOrderItems[0]?.gearItem?.name?.toLowerCase() || ""
-        const orderId = order.id.toLowerCase()
+        const orderId = order.id;
         return gearName.includes(query) || orderId.includes(query)
       }
 

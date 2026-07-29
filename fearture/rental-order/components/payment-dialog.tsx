@@ -13,6 +13,10 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
+import { createCheckoutSession } from "../actions/checkoutSession"
+import { useRouter } from "next/navigation"
+
+
 
 interface PaymentDialogProps {
   open: boolean
@@ -36,23 +40,14 @@ export function PaymentDialog({
   const [loading, setLoading] = useState(false)
 
   const handleCheckout = async () => {
+
     setLoading(true)
     try {
-      // API call endpoint mock
-      // POST /api/v1/payment/checkout
-      const response = await fetch("/api/v1/payment/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rentalOrderId, paymentType: type }),
-      }).catch(() => null)
 
-      // Fallback preview notification for demonstration
-      toast.success(
-        type === "RENTAL"
-          ? "Redirecting to Stripe Secure Checkout..."
-          : "Late fee payment completed successfully!"
-      )
-      onOpenChange(false)
+        const response = await createCheckoutSession(rentalOrderId, type);
+        //  router.push(response.data);
+        window.location.href = response.data;
+
     } catch (err) {
       toast.error("Payment initiation failed. Please try again.")
     } finally {
@@ -109,7 +104,7 @@ export function PaymentDialog({
             <div className="flex justify-between items-center text-sm font-bold">
               <span className="text-slate-900 dark:text-slate-100">Total Amount</span>
               <span className="text-lg text-emerald-600 dark:text-emerald-400">
-                £{amount.toLocaleString()}
+                BDT  {amount.toLocaleString()}
               </span>
             </div>
           </div>

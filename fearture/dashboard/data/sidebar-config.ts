@@ -11,7 +11,7 @@ export const SIDEBAR_ITEMS = {
   CUSTOMER: [
     {
       title: "Overview",
-      route: "/dashboard/customer",
+      route: "/customer-dashboard",
       icon: LayoutDashboard,
       description: "Customer dashboard overview",
     },
@@ -23,7 +23,7 @@ export const SIDEBAR_ITEMS = {
     },
     {
       title: "Payments",
-      route: "/customer-dashboard/payments",
+      route: "/customer-dashboard/rental/payment-history",
       icon: CreditCard,
       description: "View payment history",
     },

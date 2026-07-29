@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Image from "next/image"
 import { motion } from "framer-motion"
 import {
@@ -13,20 +13,24 @@ import {
   CheckCircle2,
   XCircle,
   AlertTriangle,
+  Edit3,
+  Loader2,
 } from "lucide-react"
 
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import { RentalStatusBadge, type RentalStatus } from "./rental-status-badge"
+import { Badge } from "@/components/ui/badge"
+import { RentalStatusBadge } from "./rental-status-badge"
 import { RentalTimeline } from "./rental-timeline"
 import { PaymentDialog } from "./payment-dialog"
+import { ReviewDialog } from "@/fearture/review/components/review-dialog"
 import { toast } from "sonner"
 import { RentalOrder } from "../types/types"
-
+import { getReviewByIdAction, type ReviewData } from "@/fearture/review/action/review.action"
 
 interface RentalCardProps {
-  order: RentalOrder
+  order: RentalOrder & { reviewId?: string; review?: ReviewData | null }
 }
 
 function formatDate(iso: string) {
@@ -39,11 +43,36 @@ function formatDate(iso: string) {
 
 export function RentalCard({ order }: RentalCardProps) {
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false)
+  const [reviewDialogOpen, setReviewDialogOpen] = useState(false)
+
+  // Review State
+  const [review, setReview] = useState<ReviewData | null>(order.review || null)
+  const [loadingReview, setLoadingReview] = useState(false)
 
   const firstItem = order.rentalOrderItems[0]
   const gear = firstItem?.gearItem
-
   const isLateReturn = order.status === "LATE_RETURN"
+
+  // Check for reviewId on mount or page refresh
+  const targetReviewId = order.reviewId || order.review?.id
+
+  useEffect(() => {
+    async function fetchExistingReview() {
+      if (targetReviewId && !review) {
+        setLoadingReview(true)
+        const res = await getReviewByIdAction(targetReviewId)
+        console.log("Fetched Review:", res)
+        if (res.success && res.data) {
+          setReview(res.data)
+        }
+        setLoadingReview(false)
+      }
+    }
+
+    if (order.status === "RETURNED") {
+      fetchExistingReview()
+    }
+  }, [targetReviewId, order.status])
 
   return (
     <>
@@ -66,7 +95,14 @@ export function RentalCard({ order }: RentalCardProps) {
                 {formatDate(order.createdAt)}
               </span>
             </div>
-            <RentalStatusBadge status={order.status} />
+            <div className="flex items-center gap-2">
+              {review && (
+                <Badge className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-[10px] font-bold">
+                  <Star className="size-3 fill-amber-400 mr-1" /> Reviewed
+                </Badge>
+              )}
+              <RentalStatusBadge status={order.status} />
+            </div>
           </CardHeader>
 
           {/* Body */}
@@ -133,8 +169,7 @@ export function RentalCard({ order }: RentalCardProps) {
                 {isLateReturn ? "Outstanding Late Fee" : "Total Rental Cost"}
               </span>
               <span className="text-lg font-bold text-slate-900 dark:text-slate-50">
-                £
-                {(isLateReturn ? order.lateFee ?? 0 : order.totalAmount).toLocaleString()}
+                BDT {(isLateReturn ? order.lateFee ?? 0 : order.totalAmount).toLocaleString()}
               </span>
             </div>
           </CardContent>
@@ -167,7 +202,7 @@ export function RentalCard({ order }: RentalCardProps) {
                   onClick={() => setPaymentDialogOpen(true)}
                   className="w-full bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold rounded-xl gap-2 shadow-lg shadow-orange-600/20"
                 >
-                  <AlertTriangle className="size-4 animate-pulse" /> Pay Late Fee (£{order.lateFee})
+                  <AlertTriangle className="size-4 animate-pulse" /> Pay Late Fee (BDT {order.lateFee})
                 </Button>
                 <p className="text-[10px] text-center text-orange-600 dark:text-orange-400 font-medium">
                   Overdue by {order.lateDays} {order.lateDays === 1 ? "day" : "days"}. Settle outstanding balance securely.
@@ -191,10 +226,25 @@ export function RentalCard({ order }: RentalCardProps) {
               <div className="w-full flex gap-2">
                 <Button
                   size="sm"
-                  onClick={() => toast.info("Review dialog opening...")}
-                  className="flex-1 bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white dark:text-slate-900 text-white text-xs font-semibold rounded-xl gap-1.5"
+                  disabled={loadingReview}
+                  onClick={() => setReviewDialogOpen(true)}
+                  className={`flex-1 text-xs font-semibold rounded-xl gap-1.5 ${
+                    review
+                      ? "bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/20"
+                      : "bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white dark:text-slate-900 text-white"
+                  }`}
                 >
-                  <Star className="size-3.5 fill-amber-400 text-amber-400" /> Leave Review
+                  {loadingReview ? (
+                    <Loader2 className="size-3.5 animate-spin" />
+                  ) : review ? (
+                    <>
+                      <Edit3 className="size-3.5" /> Edit Review
+                    </>
+                  ) : (
+                    <>
+                      <Star className="size-3.5 fill-amber-400 text-amber-400" /> Leave Review
+                    </>
+                  )}
                 </Button>
                 <Button
                   size="sm"
@@ -216,7 +266,7 @@ export function RentalCard({ order }: RentalCardProps) {
         </Card>
       </motion.div>
 
-      {/* Payment Dialog (Handles both standard RENTAL and LATE_FEE types) */}
+      {/* Payment Dialog */}
       <PaymentDialog
         open={paymentDialogOpen}
         onOpenChange={setPaymentDialogOpen}
@@ -225,6 +275,16 @@ export function RentalCard({ order }: RentalCardProps) {
         amount={isLateReturn ? order.lateFee ?? 0 : order.totalAmount}
         type={isLateReturn ? "LATE_FEE" : "RENTAL"}
         lateDays={order.lateDays ?? undefined}
+      />
+
+      {/* Review Dialog */}
+      <ReviewDialog
+        open={reviewDialogOpen}
+        onOpenChange={setReviewDialogOpen}
+        rentalOrderId={order.id}
+        gearName={gear?.name || "Equipment"}
+        existingReview={review}
+        onSuccess={(updatedReview) => setReview(updatedReview)}
       />
     </>
   )
