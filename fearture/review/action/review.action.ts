@@ -134,3 +134,55 @@ export async function getReviewByIdAction(reviewId: string) {
     }
   }
 }
+
+
+
+// Add to actions/review.ts
+
+export async function getReviewByGearAndUserAction(
+  gearItemId: string,
+  customerId: string
+) {
+  try {
+    const cookie = await cookies();
+    const accessToken = cookie.get("accessToken");
+    const payload = {
+      gearItemId,
+      customerId,
+    }
+
+    console.log({payload})
+    const res = await fetch(
+      `${process.env.BACKEND_URL}/api/v1/review/getreviewbygearanduser`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          
+            cookie: `accessToken=${accessToken?.value}`,
+        },
+        body: JSON.stringify(payload),
+        cache: "no-store",
+      }
+    )
+
+    const result = await res.json()
+    console.log("Fetched review by gear and user:", result)
+    if (!res.ok) {
+      throw new Error(result.message || "Failed to fetch review")
+    }
+
+    // Handles response whether data comes back as an array [review] or object
+    const reviewData = Array.isArray(result.data) ? result.data[0] : result.data
+
+    return {
+      success: true,
+      data: (reviewData || null) as ReviewData | null,
+    }
+  } catch (error: any) {
+    return {
+      success: false,
+      message: error.message || "Failed to fetch review",
+    }
+  }
+}

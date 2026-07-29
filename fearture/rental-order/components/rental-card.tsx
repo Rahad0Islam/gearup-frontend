@@ -27,10 +27,10 @@ import { PaymentDialog } from "./payment-dialog"
 import { ReviewDialog } from "@/fearture/review/components/review-dialog"
 import { toast } from "sonner"
 import { RentalOrder } from "../types/types"
-import { getReviewByIdAction, type ReviewData } from "@/fearture/review/action/review.action"
+import { getReviewByGearAndUserAction, type ReviewData } from "@/fearture/review/action/review.action"
 
 interface RentalCardProps {
-  order: RentalOrder & { reviewId?: string; review?: ReviewData | null }
+  order: RentalOrder & { review?: ReviewData | null }
 }
 
 function formatDate(iso: string) {
@@ -53,26 +53,34 @@ export function RentalCard({ order }: RentalCardProps) {
   const gear = firstItem?.gearItem
   const isLateReturn = order.status === "LATE_RETURN"
 
-  // Check for reviewId on mount or page refresh
-  const targetReviewId = order.reviewId || order.review?.id
-
+  // Extract IDs needed to query review
+  const gearItemId = firstItem?.gearItem.id|| gear?.id
+  const customerId = order.customer?.id
+console.log("Gear Item ID:", gearItemId, "Customer ID:", customerId, "Order Status:", order.status)
+  // Fetch existing review on component mount / page refresh
   useEffect(() => {
-    async function fetchExistingReview() {
-      if (targetReviewId && !review) {
+    async function fetchReview() {
+      if (!gearItemId || !customerId) return
+
+      try {
         setLoadingReview(true)
-        const res = await getReviewByIdAction(targetReviewId)
-        console.log("Fetched Review:", res)
+        const res = await getReviewByGearAndUserAction(gearItemId, customerId)
+        
+        console.log("Fetched review for gear and user:", res)
         if (res.success && res.data) {
           setReview(res.data)
         }
+      } catch (error) {
+        console.error("Error fetching review:", error)
+      } finally {
         setLoadingReview(false)
       }
     }
 
     if (order.status === "RETURNED") {
-      fetchExistingReview()
+      fetchReview()
     }
-  }, [targetReviewId, order.status])
+  }, [order.status, gearItemId, customerId])
 
   return (
     <>
