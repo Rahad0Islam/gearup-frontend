@@ -43,7 +43,7 @@ export const SIDEBAR_ITEMS = {
     },
     {
       title: "Rentals Management",
-      route: "/dashboard/provider/rentals",
+      route: "/provider-dashboard/rentals",
       icon: PackageCheck,
       description: "Manage item listings and orders",
     },
