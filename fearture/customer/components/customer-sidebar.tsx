@@ -96,8 +96,8 @@ function SidebarContent({ onClose, navigationItems, role }: SidebarContentProps)
   // Base overview routes that require exact matching
   const baseOverviewRoutes = [
     "/customer-dashboard",
-    "/dashboard/provider",
-    "/dashboard/admin",
+    "/provider-dashboard",
+    "/admin-dashboard",
   ]
 
   // 1. Determine exactly ONE active item from the list

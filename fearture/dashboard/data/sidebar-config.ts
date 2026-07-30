@@ -37,7 +37,7 @@ export const SIDEBAR_ITEMS = {
   PROVIDER: [
     {
       title: "Overview",
-      route: "/dashboard/provider",
+      route: "/provider-dashboard",
       icon: LayoutDashboard,
       description: "Provider dashboard overview",
     },
@@ -47,23 +47,29 @@ export const SIDEBAR_ITEMS = {
       icon: PackageCheck,
       description: "Manage item listings and orders",
     },
+    {
+      title: "create Gear",
+      route: "/provider-dashboard/gear/create",
+      icon: Star,
+      description: "Create and manage your gear listings",
+    },
   ],
   ADMIN: [
     {
       title: "Overview",
-      route: "/dashboard/admin",
+      route: "/admin-dashboard",
       icon: LayoutDashboard,
       description: "System administration",
     },
     {
       title: "Users",
-      route: "/dashboard/admin/users",
+      route: "/admin-dashboard/users",
       icon: Users,
       description: "Manage accounts and permissions",
     },
     {
       title: "System Logs",
-      route: "/dashboard/admin/logs",
+      route: "/admin-dashboard/logs",
       icon: ShieldAlert,
       description: "Security and system audit logs",
     },
