@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useTransition } from "react"
+import { useRouter, usePathname } from "next/navigation"
 import Image from "next/image"
 import { motion, AnimatePresence } from "framer-motion"
 import {
@@ -9,7 +10,6 @@ import {
   Package,
   Edit2,
   Trash2,
-  Tag,
   Layers,
   Inbox,
   Loader2,
@@ -40,6 +40,7 @@ import { deleteGearAction, getCategoriesAction, Category } from "../actions/gear
 interface ProviderGearViewProps {
   initialGears: GearItem[]
   initialCategories?: Category[]
+  defaultOpenCreate?: boolean
 }
 
 function isValidImageUrl(url?: string): boolean {
@@ -57,18 +58,36 @@ function isValidImageUrl(url?: string): boolean {
 export function ProviderGearView({
   initialGears,
   initialCategories = [],
+  defaultOpenCreate = false,
 }: ProviderGearViewProps) {
+  const router = useRouter()
+  const pathname = usePathname()
+
   const [gears, setGears] = useState<GearItem[]>(initialGears)
   const [categories, setCategories] = useState<Category[]>(initialCategories)
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState("ALL")
 
-  const [dialogOpen, setDialogOpen] = useState(false)
+  const [dialogOpen, setDialogOpen] = useState(defaultOpenCreate)
   const [selectedGear, setSelectedGear] = useState<GearItem | null>(null)
 
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [isDeleting, startDeleteTransition] = useTransition()
 
+  // Sync initialGears from server updates
+  useEffect(() => {
+    setGears(initialGears)
+  }, [initialGears])
+
+  // React to defaultOpenCreate prop changes (e.g. navigation to /create)
+  useEffect(() => {
+    if (defaultOpenCreate) {
+      setSelectedGear(null)
+      setDialogOpen(true)
+    }
+  }, [defaultOpenCreate])
+
+  // Fetch categories if not pre-rendered
   useEffect(() => {
     if (initialCategories.length === 0) {
       getCategoriesAction().then((res) => {
@@ -79,16 +98,30 @@ export function ProviderGearView({
     }
   }, [initialCategories])
 
-  const filteredGears = gears.filter((g) => {
-    const matchesSearch =
-      g.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      g.brand.toLowerCase().includes(searchQuery.toLowerCase())
+  // Handle modal dialog toggle & route syncing
+  const handleDialogOpenChange = (open: boolean) => {
+    setDialogOpen(open)
+    if (!open && pathname.endsWith("/create")) {
+      router.push("/provider-dashboard")
+    }
+  }
 
-    const matchesCategory =
-      selectedCategoryFilter === "ALL" || g.categoryId === selectedCategoryFilter
+  // Handle instant local state mutation & server cache revalidation
+  const handleSuccess = (updatedItem: GearItem, isEditing: boolean) => {
+    if (isEditing) {
+      setGears((prev) =>
+        prev.map((g) => (g.id === updatedItem.id ? { ...g, ...updatedItem } : g))
+      )
+    } else {
+      setGears((prev) => [updatedItem, ...prev])
+    }
 
-    return matchesSearch && matchesCategory
-  })
+    router.refresh()
+
+    if (pathname.endsWith("/create")) {
+      router.push("/provider-dashboard")
+    }
+  }
 
   const handleOpenCreate = () => {
     setSelectedGear(null)
@@ -108,6 +141,7 @@ export function ProviderGearView({
       if (res.success) {
         toast.success(res.message)
         setGears((prev) => prev.filter((item) => item.id !== deleteId))
+        router.refresh()
       } else {
         toast.error(res.message)
       }
@@ -115,11 +149,22 @@ export function ProviderGearView({
     })
   }
 
+  const filteredGears = gears.filter((g) => {
+    const matchesSearch =
+      g.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      g.brand.toLowerCase().includes(searchQuery.toLowerCase())
+
+    const matchesCategory =
+      selectedCategoryFilter === "ALL" || g.categoryId === selectedCategoryFilter
+
+    return matchesSearch && matchesCategory
+  })
+
   const totalStockCount = gears.reduce((acc, curr) => acc + (curr.stock || 0), 0)
 
   return (
     <div className="space-y-8 p-6 max-w-7xl mx-auto">
-      {/* Header */}
+      {/* Header Section */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-50 tracking-tight">
@@ -177,7 +222,7 @@ export function ProviderGearView({
         </Card>
       </div>
 
-      {/* Category Pills & Search */}
+      {/* Category Filter Pills & Search Input */}
       <div className="flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-1.5 overflow-x-auto w-full pb-1 md:pb-0">
           <button
@@ -216,7 +261,7 @@ export function ProviderGearView({
         </div>
       </div>
 
-      {/* Cards Grid */}
+      {/* Equipment Inventory Grid */}
       {filteredGears.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center rounded-3xl border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40">
           <div className="p-4 rounded-full bg-slate-100 dark:bg-slate-900 text-slate-400 mb-3">
@@ -334,12 +379,13 @@ export function ProviderGearView({
         </motion.div>
       )}
 
-      {/* Dialog */}
+      {/* Gear Modal Form */}
       <GearFormDialog
         open={dialogOpen}
-        onOpenChange={setDialogOpen}
+        onOpenChange={handleDialogOpenChange}
         categories={categories}
         initialData={selectedGear}
+        onSuccess={handleSuccess}
       />
 
       {/* Delete Confirmation Alert */}

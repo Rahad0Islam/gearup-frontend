@@ -43,10 +43,10 @@ interface GearFormDialogProps {
   onOpenChange: (open: boolean) => void
   categories: Category[]
   initialData?: GearItem | null
-  onSuccess?: () => void
+  // Pass item and mode back to parent for instant UI update
+  onSuccess?: (item: GearItem, isEditing: boolean) => void 
 }
 
-// URL Helper Validator
 function isValidImageUrl(url: string): boolean {
   if (!url || typeof url !== "string") return false
   const trimmed = url.trim()
@@ -137,7 +137,8 @@ export function GearFormDialog({
       if (res.success) {
         toast.success(res.message)
         onOpenChange(false)
-        onSuccess?.()
+        // Pass data back to sync state
+        onSuccess?.(res.data || { ...payload, id: initialData?.id || Date.now().toString(), categoryId: selectedCategoryId }, isEditing)
       } else {
         toast.error(res.message)
       }
@@ -269,7 +270,7 @@ export function GearFormDialog({
             </div>
           </div>
 
-          {/* Image URL with safe live preview */}
+          {/* Image URL */}
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
               Image URL *
@@ -283,7 +284,6 @@ export function GearFormDialog({
               className="rounded-xl border-slate-200 dark:border-slate-800 text-xs"
             />
 
-            {/* Safe Image Preview Box */}
             <div className="relative h-28 w-full rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800 mt-2 flex items-center justify-center">
               {showImagePreview ? (
                 <Image

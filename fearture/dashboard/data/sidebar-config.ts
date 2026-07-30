@@ -62,6 +62,12 @@ export const SIDEBAR_ITEMS = {
       description: "System administration",
     },
     {
+      title: "Create Category",
+      route: "/admin-dashboard/categories/create",
+      icon: Star,
+      description: "Create and manage gear categories",
+    },
+    {
       title: "Users",
       route: "/admin-dashboard/users",
       icon: Users,
