@@ -141,6 +141,7 @@ export function GearDetails({
         // Direct to Customer Dashboard Rentals page
         router.push("/customer-dashboard/rental")
       } else {
+        router.push("/login?redirectTo=/gear/" + gear.id)
         setErrorMsg(res.message || "Failed to create rental order. Please try again.")
       }
     } catch (err) {

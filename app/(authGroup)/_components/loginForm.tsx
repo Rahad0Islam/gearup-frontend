@@ -20,9 +20,7 @@ import {
 } from "@/components/ui/card"
 import { useState } from "react"
 import { loginAction } from "../_actions/authAction"
-import { useRouter } from "next/navigation"
-
-
+import { useRouter, useSearchParams } from "next/navigation"
 
 const loginSchema = z.object({
   email: z.string().min(1, "Email is required").email("Enter a valid email"),
@@ -46,6 +44,11 @@ const item = {
 
 export default function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  
+  // Extract redirectTo from query params (e.g., /login?redirectTo=/gear/123)
+  const redirectTo = searchParams.get("redirectTo");
+
   const [showPassword, setShowPassword] = useState(false)
 
   const {
@@ -59,32 +62,37 @@ export default function LoginForm() {
   })
 
   async function onSubmit(values: LoginValues) {
-  
-    
     const loginCredentials = {
       email: values.email,
       password: values.password
     }
     const res = await loginAction(loginCredentials);
 
-    if(res.success){
+    if (res.success) {
       toast.success("Welcome back");
 
-      if(res.data.user.role === "ADMIN"){
-        router.push("/admin-dashboard")
-      }
-      else if(res.data.user.role === "CUSTOMER"){
-      router.push("/customer-dashboard")
-      }
-      else if(res.data.user.role === "PROVIDER"){
-        router.push("/provider-dashboard")
+      // 1. Determine the default dashboard route based on user role
+      let defaultDashboard = "/";
+      if (res.data.user.role === "ADMIN") {
+        defaultDashboard = "/admin-dashboard";
+      } else if (res.data.user.role === "CUSTOMER") {
+        defaultDashboard = "/customer-dashboard";
+      } else if (res.data.user.role === "PROVIDER") {
+        defaultDashboard = "/provider-dashboard";
       }
 
-      
-    }else{
-      toast.error(res.message || "Login failed. Please try again.")
+      // 2. Validate redirectTo to prevent open redirect vulnerabilities
+      const targetUrl =
+        redirectTo && redirectTo.startsWith("/") && !redirectTo.startsWith("//")
+          ? redirectTo
+          : defaultDashboard;
+
+      // 3. Perform navigation
+      router.push(targetUrl);
+      router.refresh();
+    } else {
+      toast.error(res.message || "Login failed. Please try again.");
     }
-  
   }
 
   return (
