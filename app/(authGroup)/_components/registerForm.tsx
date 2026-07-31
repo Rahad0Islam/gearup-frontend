@@ -1,11 +1,14 @@
 "use client"
 
+import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
-import { motion, AnimatePresence } from "motion/react"
-import { Eye, EyeOff, Loader2, Lock, Mail } from "lucide-react"
+import { AnimatePresence, motion } from "motion/react"
+import { Eye, EyeOff, Loader2, Lock, Mail, User } from "lucide-react"
 import { toast } from "sonner"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -18,16 +21,25 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { useState } from "react"
-import { loginAction } from "../_actions/authAction"
-import { useRouter, useSearchParams } from "next/navigation"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { registerAction } from "../_actions/authAction"
 
-const loginSchema = z.object({
+const registerSchema = z.object({
+  name: z.string().min(1, "Name is required").min(2, "Name must be at least 2 characters"),
   email: z.string().min(1, "Email is required").email("Enter a valid email"),
   password: z.string().min(1, "Password is required").min(3, "Password must be at least 3 characters"),
+  role: z.enum(["CUSTOMER", "PROVIDER"], {
+    message: "Select a valid role",
+  }),
 })
 
-type LoginValues = z.infer<typeof loginSchema>
+type RegisterValues = z.infer<typeof registerSchema>
 
 const container = {
   hidden: { opacity: 0 },
@@ -42,56 +54,33 @@ const item = {
   show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] as const } },
 }
 
-export default function LoginForm() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  
-  // Extract redirectTo from query params (e.g., /login?redirectTo=/gear/123)
-  const redirectTo = searchParams.get("redirectTo");
-
+export default function RegisterForm() {
+  const router = useRouter()
   const [showPassword, setShowPassword] = useState(false)
 
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors, isSubmitting },
-  } = useForm<LoginValues>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: { email: "", password: "" },
+  } = useForm<RegisterValues>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: { name: "", email: "", password: "", role: "CUSTOMER" },
     mode: "onTouched",
   })
 
-  async function onSubmit(values: LoginValues) {
-    const loginCredentials = {
-      email: values.email,
-      password: values.password
-    }
-    const res = await loginAction(loginCredentials);
+  const role = watch("role")
+
+  async function onSubmit(values: RegisterValues) {
+    const res = await registerAction(values)
 
     if (res.success) {
-      toast.success("Welcome back");
-
-      // 1. Determine the default dashboard route based on user role
-      let defaultDashboard = "/";
-      if (res.data.user.role === "ADMIN") {
-        defaultDashboard = "/admin-dashboard";
-      } else if (res.data.user.role === "CUSTOMER") {
-        defaultDashboard = "/customer-dashboard";
-      } else if (res.data.user.role === "PROVIDER") {
-        defaultDashboard = "/provider-dashboard";
-      }
-
-      // 2. Validate redirectTo to prevent open redirect vulnerabilities
-      const targetUrl =
-        redirectTo && redirectTo.startsWith("/") && !redirectTo.startsWith("//")
-          ? redirectTo
-          : defaultDashboard;
-
-      // 3. Perform navigation
-      router.push(targetUrl);
-      router.refresh();
+      toast.success(res.message || "Account created successfully")
+      router.push("/login")
+    //   router.refresh()
     } else {
-      toast.error(res.message || "Login failed. Please try again.");
+      toast.error(res.message || "Registration failed. Please try again.")
     }
   }
 
@@ -102,8 +91,7 @@ export default function LoginForm() {
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
       className="w-full max-w-md"
     >
-      <Card className="relative overflow-hidden rounded-xl border-0 bg-background/80 shadow-xl ring-1 ring-foreground/10 backdrop-blur-xl">
-        {/* subtle top accent glow */}
+      <Card className="relative overflow-hidden rounded-xl border-0 bg-card/60 shadow-xl ring-1 ring-foreground/10 backdrop-blur-xl">
         <div
           aria-hidden
           className="pointer-events-none absolute inset-x-0 -top-24 h-40 bg-primary/15 blur-3xl"
@@ -112,11 +100,11 @@ export default function LoginForm() {
         <CardHeader className="relative gap-2 text-center">
           <motion.div variants={item} initial="hidden" animate="show">
             <div className="mx-auto mb-2 flex size-11 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/20">
-              <Lock className="size-5" />
+              <User className="size-5" />
             </div>
-            <CardTitle className="text-xl tracking-tight">Welcome back</CardTitle>
+            <CardTitle className="text-xl tracking-tight">Create your account</CardTitle>
             <CardDescription className="mt-1">
-              Sign in to your account to continue
+              Join GearUp as a customer or provider
             </CardDescription>
           </motion.div>
         </CardHeader>
@@ -130,7 +118,24 @@ export default function LoginForm() {
             noValidate
             className="flex flex-col gap-4"
           >
-            {/* Email */}
+            <motion.div variants={item} className="flex flex-col gap-2">
+              <Label htmlFor="name">Name</Label>
+              <div className="group relative">
+                <User className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
+                <Input
+                  id="name"
+                  type="text"
+                  autoComplete="name"
+                  placeholder="Your name"
+                  disabled={isSubmitting}
+                  aria-invalid={!!errors.name}
+                  className="h-11 pl-9 transition-shadow duration-200 focus-visible:shadow-[0_0_0_4px] focus-visible:shadow-primary/10"
+                  {...register("name")}
+                />
+              </div>
+              <FieldError message={errors.name?.message} />
+            </motion.div>
+
             <motion.div variants={item} className="flex flex-col gap-2">
               <Label htmlFor="email">Email</Label>
               <div className="group relative">
@@ -149,7 +154,24 @@ export default function LoginForm() {
               <FieldError message={errors.email?.message} />
             </motion.div>
 
-            {/* Password */}
+            <motion.div variants={item} className="flex flex-col gap-2">
+              <Label htmlFor="role">Role</Label>
+              <Select
+                value={role}
+                onValueChange={(value) => setValue("role", value as "CUSTOMER" | "PROVIDER", { shouldValidate: true })}
+                disabled={isSubmitting}
+              >
+                <SelectTrigger id="role" className="h-11 rounded-lg">
+                  <SelectValue placeholder="Select role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="CUSTOMER">Customer</SelectItem>
+                  <SelectItem value="PROVIDER">Provider</SelectItem>
+                </SelectContent>
+              </Select>
+              <FieldError message={errors.role?.message} />
+            </motion.div>
+
             <motion.div variants={item} className="flex flex-col gap-2">
               <Label htmlFor="password">Password</Label>
               <div className="group relative">
@@ -157,8 +179,8 @@ export default function LoginForm() {
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  autoComplete="current-password"
-                  placeholder="Enter your password"
+                  autoComplete="new-password"
+                  placeholder="Create a password"
                   disabled={isSubmitting}
                   aria-invalid={!!errors.password}
                   className="h-11 px-9 transition-shadow duration-200 focus-visible:shadow-[0_0_0_4px] focus-visible:shadow-primary/10"
@@ -193,17 +215,6 @@ export default function LoginForm() {
               <FieldError message={errors.password?.message} />
             </motion.div>
 
-            {/* Forgot password */}
-            <motion.div variants={item} className="-mt-1 flex justify-end">
-              <a
-                href="#"
-                className="text-xs font-medium text-muted-foreground transition-colors hover:text-primary"
-              >
-                Forgot password?
-              </a>
-            </motion.div>
-
-            {/* Submit */}
             <motion.div variants={item}>
               <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}>
                 <Button
@@ -215,10 +226,10 @@ export default function LoginForm() {
                   {isSubmitting ? (
                     <>
                       <Loader2 className="size-4 animate-spin" />
-                      Signing in...
+                      Creating account...
                     </>
                   ) : (
-                    "Sign in"
+                    "Sign up"
                   )}
                 </Button>
               </motion.div>
@@ -228,13 +239,13 @@ export default function LoginForm() {
               variants={item}
               className="text-center text-sm text-muted-foreground"
             >
-              {"Don't have an account? "}
-              <a
-                href="/register"
+              Already have an account?{" "}
+              <Link
+                href="/login"
                 className="font-medium text-foreground underline-offset-4 transition-colors hover:text-primary hover:underline"
               >
-                Sign up
-              </a>
+                Sign in
+              </Link>
             </motion.p>
           </motion.form>
         </CardContent>
