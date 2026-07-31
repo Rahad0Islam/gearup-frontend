@@ -33,7 +33,6 @@ const NAV_LINKS = [
   { label: "Home", href: "/" },
   { label: "Gear", href: "/gear" },
   { label: "How it works", href: "#how-it-works" },
-  { label: "Reviews", href: "#reviews" },
 ]
 
 type ProfileDropdownProps = {
@@ -105,6 +104,14 @@ export default function NavbarClient({ user, categories = [] }: ProfileDropdownP
                 {link.label}
               </Link>
             ))}
+            {user ? (
+              <Link
+                href={dashboardHref}
+                className="relative rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                Dashboard
+              </Link>
+            ) : null}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
@@ -202,6 +209,15 @@ export default function NavbarClient({ user, categories = [] }: ProfileDropdownP
                     {link.label}
                   </Link>
                 ))}
+                {user ? (
+                  <Link
+                    href={dashboardHref}
+                    onClick={() => setOpen(false)}
+                    className="rounded-xl px-3 py-3 text-base font-medium text-foreground/90 transition-colors hover:bg-accent hover:text-accent-foreground"
+                  >
+                    Dashboard
+                  </Link>
+                ) : null}
                 <div className="rounded-xl border border-border/60 bg-background/50 p-2">
                   <p className="px-2 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
                     Categories
