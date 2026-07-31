@@ -19,6 +19,14 @@ export default async function GearPage({
   searchParams?: Promise<SearchParams>
 }) {
   const resolvedSearchParams = (await searchParams) ?? {}
+
+  // Explicitly type narrow sortOrder to "asc" | "desc" | undefined
+  const rawSortOrder = firstValue(resolvedSearchParams.sortOrder)
+  const sortOrder: "asc" | "desc" | undefined =
+    rawSortOrder === "asc" || rawSortOrder === "desc"
+      ? rawSortOrder
+      : undefined
+
   const query = {
     name: firstValue(resolvedSearchParams.name)?.trim(),
     description: firstValue(resolvedSearchParams.description)?.trim(),
@@ -29,7 +37,7 @@ export default async function GearPage({
       ? Number(firstValue(resolvedSearchParams.rentPricePerDay))
       : undefined,
     sortBy: firstValue(resolvedSearchParams.sortBy)?.trim() || "createdAt",
-    sortOrder: firstValue(resolvedSearchParams.sortOrder) === "asc" ? "asc" : "desc",
+    sortOrder,
     brand: firstValue(resolvedSearchParams.brand)?.trim(),
     status: firstValue(resolvedSearchParams.status)?.trim(),
   }

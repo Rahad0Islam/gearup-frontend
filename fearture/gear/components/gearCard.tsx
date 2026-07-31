@@ -189,7 +189,7 @@ export function GearCard({
             <Button
               className="w-full rounded-xl shadow-sm"
               disabled={!isAvailable}
-              onClick={() => onRentNow?.(gear)}
+             onClick={() => router.push(`/gear/${gear.id}`)}
             >
               Rent Now
               <ArrowRight className="size-4" aria-hidden="true" />
