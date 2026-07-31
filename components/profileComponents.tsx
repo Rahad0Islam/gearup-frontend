@@ -25,14 +25,22 @@ type ProfileDropdownProps = {
   user: {
     name?: string;
     image?: string;
+    role?: string;
   };
 };
+
+function getDashboardHref(role?: string) {
+  if (role === "ADMIN") return "/admin-dashboard";
+  if (role === "PROVIDER") return "/provider-dashboard";
+  return "/customer-dashboard";
+}
 
 export default function ProfileDropdown({
   user,
 }: ProfileDropdownProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const dashboardHref = getDashboardHref(user.role);
 
   const handleLogout = () => {
     startTransition(async () => {
@@ -67,6 +75,12 @@ export default function ProfileDropdown({
         <DropdownMenuLabel>
           {user.name || "User"}
         </DropdownMenuLabel>
+
+        <DropdownMenuSeparator />
+
+        <DropdownMenuItem asChild>
+          <Link href={dashboardHref}>Dashboard</Link>
+        </DropdownMenuItem>
 
         <DropdownMenuSeparator />
 

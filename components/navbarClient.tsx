@@ -28,11 +28,20 @@ type ProfileDropdownProps = {
   user: {
     name?: string ;
     image?: string ;
+    role?: string;
   };
 };
+
+function getDashboardHref(role?: string) {
+  if (role === "ADMIN") return "/admin-dashboard"
+  if (role === "PROVIDER") return "/provider-dashboard"
+  return "/customer-dashboard"
+}
+
 export default function NavbarClient({ user }: ProfileDropdownProps) {
      const [scrolled, setScrolled] = useState(false)
   const [open, setOpen] = useState(false)
+  const dashboardHref = getDashboardHref(user?.role)
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8)
@@ -83,6 +92,14 @@ export default function NavbarClient({ user }: ProfileDropdownProps) {
                 {link.label}
               </Link>
             ))}
+            {user ? (
+              <Link
+                href={dashboardHref}
+                className="relative rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                Dashboard
+              </Link>
+            ) : null}
           </nav>
 
           
@@ -153,10 +170,19 @@ export default function NavbarClient({ user }: ProfileDropdownProps) {
                     {link.label}
                   </Link>
                 ))}
+                {user ? (
+                  <Link
+                    href={dashboardHref}
+                    onClick={() => setOpen(false)}
+                    className="rounded-xl px-3 py-3 text-base font-medium text-foreground/90 transition-colors hover:bg-accent hover:text-accent-foreground"
+                  >
+                    Dashboard
+                  </Link>
+                ) : null}
               </nav>
               <div className="mt-3 flex flex-col gap-2 border-t border-border/60 pt-3">
-                 <Button asChild>
-              <Link href="#">
+                <Button asChild>
+              <Link href="/login">
                 Sign in
               </Link>
             </Button>

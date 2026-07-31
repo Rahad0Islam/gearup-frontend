@@ -5,14 +5,40 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Logo } from "@/components/logo"
 
+type SearchParams = Record<string, string | string[] | undefined>
+
+function firstValue(value: string | string[] | undefined) {
+  if (Array.isArray(value)) return value[0]
+  return value
+}
+
+function toNumber(value: string | undefined, fallback: number) {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback
+}
+
 const highlights = [
   { label: "Verified gear", value: "1k+" },
   { label: "Fast pickup", value: "Same day" },
   { label: "Trusted brands", value: "Top rated" },
 ]
 
-export default async function Page() {
-  const query = { page: 1, limit: 12 }
+export default async function Page({
+  searchParams,
+}: {
+  searchParams?: Promise<SearchParams>
+}) {
+  const resolvedSearchParams = (await searchParams) ?? {}
+  const query = {
+    name: firstValue(resolvedSearchParams.name)?.trim(),
+    page: toNumber(firstValue(resolvedSearchParams.page), 1),
+    limit: toNumber(firstValue(resolvedSearchParams.limit), 12),
+    searchTerm: firstValue(resolvedSearchParams.searchTerm)?.trim(),
+    rentPricePerDay: firstValue(resolvedSearchParams.rentPricePerDay)
+      ? Number(firstValue(resolvedSearchParams.rentPricePerDay))
+      : undefined,
+    brand: firstValue(resolvedSearchParams.brand)?.trim(),
+  }
   const gearsResult = await getAllGear(query)
   const items = Array.isArray(gearsResult?.data) ? gearsResult.data : []
   const meta = gearsResult?.meta || { page: query.page, limit: query.limit, total: items.length, totalPage: 1 }
