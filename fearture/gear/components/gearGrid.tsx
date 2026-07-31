@@ -1,8 +1,12 @@
-import { getAllGear } from "../_actions/gear.action"
+import { getAllGear, type GearListQueryParams } from "../_actions/gear.action"
 import { GearGridClient } from "./gear-grid-client"
 
-export async function GearGrid() {
-  const gears = await getAllGear()
+interface GearGridProps {
+  query?: GearListQueryParams
+}
+
+export async function GearGrid({ query = {} }: GearGridProps) {
+  const gears = await getAllGear(query)
 
   console.log("GEARS:", gears)
 

@@ -1,14 +1,7 @@
-    
-import React from 'react'
+    import React from "react"
 
+    const publicLayout = async ({ children }: { children: React.ReactNode }) => {
+      return <div className="min-h-screen pt-24 lg:pt-28">{children}</div>
+    }
 
-const publicLayout = async({ children }: { children: React.ReactNode }) => {
- 
-  return (
-    
-    <div>
-      {children}</div>
-  )
-}
-
-export default publicLayout  
+    export default publicLayout
