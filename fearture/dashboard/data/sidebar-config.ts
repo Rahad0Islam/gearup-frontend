@@ -73,6 +73,12 @@ export const SIDEBAR_ITEMS = {
       icon: Users,
       description: "Manage accounts and permissions",
     },
+     {
+      title: "Rentals Management",
+      route: "/admin-dashboard/rentals",
+      icon: PackageCheck,
+      description: "Manage item listings and orders",
+    },
     {
       title: "System Logs",
       route: "/admin-dashboard/logs",
