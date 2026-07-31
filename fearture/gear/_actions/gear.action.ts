@@ -13,6 +13,21 @@ export interface GearListQueryParams {
     status?: string
 }
 
+export interface CategoryGearItem {
+    id: string
+    name: string
+    description?: string
+    rentPricePerDay?: number
+    discountPrice?: number
+    stock?: number
+    brand?: string
+    image?: string
+    categoryId?: string
+    status?: string
+    createdAt?: string
+    updatedAt?: string
+}
+
 function buildQueryString(params: GearListQueryParams) {
     const query = new URLSearchParams()
 
@@ -56,5 +71,27 @@ export const getAllGear = async (params: GearListQueryParams = {}) => {
     } catch (error) {
         console.error("Error fetching gear data:", error)
         return { data: [], meta: { page: 1, limit: params.limit ?? 10, total: 0, totalPage: 1 } }
+    }
+}
+
+export const getGearByCategoryId = async (categoryId: string) => {
+    try {
+        const response = await fetch(`${process.env.BACKEND_URL}/api/v1/gear/category/${categoryId}`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            cache: "no-store",
+        })
+
+        if (!response.ok) {
+            throw new Error("Failed to fetch category gear data")
+        }
+
+        const data = await response.json()
+        return data
+    } catch (error) {
+        console.error("Error fetching category gear data:", error)
+        return { data: [] as CategoryGearItem[] }
     }
 }

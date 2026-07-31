@@ -10,16 +10,28 @@ import { AnimatePresence, motion } from "motion/react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 import { ModeToggle } from "@/components/mode-toggle"
 import { Logo } from "./logo"
 import { useEffect } from "react"
 import ProfileDropdown from "./profileComponents"
 
+type NavbarCategory = {
+  id: string
+  name: string
+}
+
 const NAV_LINKS = [
   { label: "Home", href: "/" },
   { label: "Gear", href: "/gear" },
-  { label: "Categories", href: "#categories" },
   { label: "How it works", href: "#how-it-works" },
   { label: "Reviews", href: "#reviews" },
 ]
@@ -30,6 +42,7 @@ type ProfileDropdownProps = {
     image?: string ;
     role?: string;
   };
+  categories?: NavbarCategory[];
 };
 
 function getDashboardHref(role?: string) {
@@ -38,7 +51,7 @@ function getDashboardHref(role?: string) {
   return "/customer-dashboard"
 }
 
-export default function NavbarClient({ user }: ProfileDropdownProps) {
+export default function NavbarClient({ user, categories = [] }: ProfileDropdownProps) {
      const [scrolled, setScrolled] = useState(false)
   const [open, setOpen] = useState(false)
   const dashboardHref = getDashboardHref(user?.role)
@@ -92,14 +105,33 @@ export default function NavbarClient({ user }: ProfileDropdownProps) {
                 {link.label}
               </Link>
             ))}
-            {user ? (
-              <Link
-                href={dashboardHref}
-                className="relative rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                Dashboard
-              </Link>
-            ) : null}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="relative rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  Categories
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-64">
+                <DropdownMenuLabel>Browse categories</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/gear">All gear</Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                {categories.length > 0 ? (
+                  categories.map((category) => (
+                    <DropdownMenuItem key={category.id} asChild>
+                      <Link href={`/gear/category/${category.id}`}>{category.name}</Link>
+                    </DropdownMenuItem>
+                  ))
+                ) : (
+                  <DropdownMenuItem disabled>No categories found</DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </nav>
 
           
@@ -170,15 +202,32 @@ export default function NavbarClient({ user }: ProfileDropdownProps) {
                     {link.label}
                   </Link>
                 ))}
-                {user ? (
+                <div className="rounded-xl border border-border/60 bg-background/50 p-2">
+                  <p className="px-2 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                    Categories
+                  </p>
                   <Link
-                    href={dashboardHref}
+                    href="/gear"
                     onClick={() => setOpen(false)}
-                    className="rounded-xl px-3 py-3 text-base font-medium text-foreground/90 transition-colors hover:bg-accent hover:text-accent-foreground"
+                    className="block rounded-lg px-3 py-2 text-sm font-medium text-foreground/90 transition-colors hover:bg-accent hover:text-accent-foreground"
                   >
-                    Dashboard
+                    All gear
                   </Link>
-                ) : null}
+                  {categories.length > 0 ? (
+                    categories.map((category) => (
+                      <Link
+                        key={category.id}
+                        href={`/gear/category/${category.id}`}
+                        onClick={() => setOpen(false)}
+                        className="block rounded-lg px-3 py-2 text-sm font-medium text-foreground/90 transition-colors hover:bg-accent hover:text-accent-foreground"
+                      >
+                        {category.name}
+                      </Link>
+                    ))
+                  ) : (
+                    <p className="px-3 py-2 text-sm text-muted-foreground">No categories found</p>
+                  )}
+                </div>
               </nav>
               <div className="mt-3 flex flex-col gap-2 border-t border-border/60 pt-3">
                 <Button asChild>
