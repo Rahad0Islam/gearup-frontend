@@ -22,7 +22,7 @@ export const SIDEBAR_ITEMS = {
       description: "Track rental orders and status",
     },
     {
-      title: "Payments",
+      title: "Payment History",
       route: "/customer-dashboard/rental/payment-history",
       icon: CreditCard,
       description: "View payment history",
@@ -40,6 +40,12 @@ export const SIDEBAR_ITEMS = {
       route: "/provider-dashboard",
       icon: LayoutDashboard,
       description: "Provider dashboard overview",
+    },
+    {
+      title: "Payment History",
+      route: "/provider-dashboard/rentals/payment-history",
+      icon: CreditCard,
+      description: "View payment history",
     },
     {
       title: "Rentals Management",
@@ -78,6 +84,12 @@ export const SIDEBAR_ITEMS = {
       route: "/admin-dashboard/users",
       icon: Users,
       description: "Manage accounts and permissions",
+    },
+    {
+      title: "Payment History",
+      route: "/admin-dashboard/payment-history",
+      icon: CreditCard,
+      description: "View payment history",
     },
      {
       title: "Rentals Management",
