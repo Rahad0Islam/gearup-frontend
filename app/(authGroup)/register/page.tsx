@@ -1,12 +1,12 @@
-import React from 'react'
+import React, { Suspense } from 'react'
 import RegisterForm from '../_components/registerForm'
 
-const registerPage = () => {
+export default function RegisterPage() {
   return (
     <div className="flex min-h-screen items-center justify-center">
-      <RegisterForm />
+      <Suspense fallback={<div className="text-sm text-slate-500">Loading registration...</div>}>
+        <RegisterForm />
+      </Suspense>
     </div>
   )
 }
-
-export default registerPage
