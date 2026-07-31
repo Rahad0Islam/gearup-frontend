@@ -13,7 +13,7 @@ function toNumber(value: string | undefined, fallback: number) {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback
 }
 
-export default async function AdminPage({
+export default async function AdminUsersPage({
   searchParams,
 }: {
   searchParams?: Promise<SearchParams>
