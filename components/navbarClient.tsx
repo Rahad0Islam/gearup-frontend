@@ -7,6 +7,7 @@ import * as React from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useTransition } from "react"
+import { usePathname } from "next/navigation"
 import {
   Menu,
   X,
@@ -36,6 +37,7 @@ import { Logo } from "./logo"
 import { useEffect } from "react"
 import logout from "@/app/(authGroup)/_actions/logOut"
 import ProfileDropdown from "./profileComponents"
+import { MobileSidebarTrigger } from "@/fearture/customer/components/customer-sidebar"
 
 type NavbarCategory = {
   id: string
@@ -55,6 +57,7 @@ type ProfileDropdownProps = {
     role?: string;
   };
   categories?: NavbarCategory[];
+  leftSlot?: React.ReactNode;
 };
 
 function getDashboardHref(role?: string) {
@@ -63,7 +66,7 @@ function getDashboardHref(role?: string) {
   return "/customer-dashboard"
 }
 
-export default function NavbarClient({ user, categories = [] }: ProfileDropdownProps) {
+export default function NavbarClient({ user, categories = [], leftSlot }: ProfileDropdownProps) {
      const [scrolled, setScrolled] = useState(false)
   const [open, setOpen] = useState(false)
   const [mobileView, setMobileView] = useState<"main" | "profile" | "categories">("main")
@@ -95,6 +98,15 @@ export default function NavbarClient({ user, categories = [] }: ProfileDropdownP
     setOpen(false)
   }
 
+  const pathname = usePathname()
+  const dashRole: "CUSTOMER" | "PROVIDER" | "ADMIN" | null = (() => {
+    if (!pathname) return null
+    if (pathname.startsWith("/admin-dashboard")) return "ADMIN"
+    if (pathname.startsWith("/provider-dashboard")) return "PROVIDER"
+    if (pathname.startsWith("/customer-dashboard")) return "CUSTOMER"
+    return null
+  })()
+
   const handleMobileLogout = () => {
     startTransition(async () => {
       try {
@@ -125,13 +137,21 @@ export default function NavbarClient({ user, categories = [] }: ProfileDropdownP
           )}
         >
           {/* Brand */}
-          <Link
-            href="/"
-            className="rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-            aria-label="GearUp home"
-          >
-            <Logo />
-          </Link>
+          <div className="flex items-center gap-2">
+            {leftSlot}
+            {dashRole ? (
+              <div className="lg:hidden">
+                <MobileSidebarTrigger role={dashRole} />
+              </div>
+            ) : null}
+            <Link
+              href="/"
+              className="rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              aria-label="GearUp home"
+            >
+              <Logo />
+            </Link>
+          </div>
 
           {/* Desktop links */}
           <nav className="hidden items-center gap-1 md:flex" aria-label="Primary">

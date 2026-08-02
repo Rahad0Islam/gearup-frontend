@@ -4,7 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Menu } from "lucide-react"
+import { PanelLeft } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
@@ -194,38 +194,49 @@ interface Props {
   role: Role
 }
 
-export function CustomerSidebar({ role }: Props) {
+interface MobileSidebarTriggerProps {
+  role: Role
+  className?: string
+}
+
+export function MobileSidebarTrigger({ role, className }: MobileSidebarTriggerProps) {
   const [isOpen, setIsOpen] = useState(false)
   const navigationItems = SIDEBAR_ITEMS[role] || []
 
   return (
-    <>
-      {/* Mobile Menu Button */}
-      <div className="lg:hidden fixed top-20 left-0 z-30 p-4">
-        <Sheet open={isOpen} onOpenChange={setIsOpen}>
-          <SheetTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-900"
-            >
-              <Menu className="h-6 w-6" />
-              <span className="sr-only">Open sidebar</span>
-            </Button>
-          </SheetTrigger>
-          <SheetContent
-            side="left"
-            className="w-80 p-0 border-slate-200 dark:border-slate-800"
-          >
-            <SidebarContent
-              onClose={() => setIsOpen(false)}
-              navigationItems={navigationItems}
-              role={role}
-            />
-          </SheetContent>
-        </Sheet>
-      </div>
+    <Sheet open={isOpen} onOpenChange={setIsOpen}>
+      <SheetTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label="Open sidebar"
+          className={
+            className ??
+            "inline-flex size-9 items-center justify-center rounded-full border border-border/60 bg-background/60 text-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          }
+        >
+          <PanelLeft className="size-5" />
+        </Button>
+      </SheetTrigger>
+      <SheetContent
+        side="left"
+        className="w-80 p-0 border-slate-200 dark:border-slate-800"
+      >
+        <SidebarContent
+          onClose={() => setIsOpen(false)}
+          navigationItems={navigationItems}
+          role={role}
+        />
+      </SheetContent>
+    </Sheet>
+  )
+}
 
+export function CustomerSidebar({ role }: Props) {
+  const navigationItems = SIDEBAR_ITEMS[role] || []
+
+  return (
+    <>
       {/* Desktop Sidebar */}
       <div className="hidden lg:block">
         <AnimatePresence mode="wait">
