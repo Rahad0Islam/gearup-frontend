@@ -47,7 +47,7 @@ type NavbarCategory = {
 const NAV_LINKS = [
   { label: "Home", href: "/" },
   { label: "Gear", href: "/gear" },
-  { label: "How it works", href: "#how-it-works" },
+  { label: "How it works", href: "/how-it-works" },
 ]
 
 type ProfileDropdownProps = {
