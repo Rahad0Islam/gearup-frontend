@@ -139,6 +139,40 @@ export async function getReviewByIdAction(reviewId: string) {
 
 // Add to actions/review.ts
 
+// 3. Delete Review Action
+export async function deleteReviewAction(reviewId: string) {
+  try {
+
+    console.log("Deleting review with ID:", reviewId) 
+    const cookie = await cookies();
+    const accessToken = cookie.get("accessToken");
+    const res = await fetch(`${process.env.BACKEND_URL}/api/v1/review/${reviewId}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        cookie: `accessToken=${accessToken?.value}`,
+      },
+      cache: "no-store",
+    })
+
+    const result = await res.json()
+
+    if (!res.ok) {
+      throw new Error(result.message || "Failed to delete review")
+    }
+
+    return {
+      success: true,
+      message: result.message || "Review deleted successfully",
+    }
+  } catch (error: any) {
+    return {
+      success: false,
+      message: error.message || "Something went wrong while deleting review",
+    }
+  }
+}
+
 export async function getReviewByGearAndUserAction(
   gearItemId: string,
   customerId: string

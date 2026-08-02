@@ -21,6 +21,7 @@ import {
 import { AnimatePresence, motion } from "motion/react"
 
 import { cn } from "@/lib/utils"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -36,7 +37,7 @@ import { ModeToggle } from "@/components/mode-toggle"
 import { Logo } from "./logo"
 import { useEffect } from "react"
 import logout from "@/app/(authGroup)/_actions/logOut"
-import ProfileDropdown from "./profileComponents"
+import ProfileDropdown, { ProfileDropdownHandle } from "./profileComponents"
 import { MobileSidebarTrigger } from "@/fearture/customer/components/customer-sidebar"
 
 type NavbarCategory = {
@@ -70,9 +71,11 @@ export default function NavbarClient({ user, categories = [], leftSlot }: Profil
      const [scrolled, setScrolled] = useState(false)
   const [open, setOpen] = useState(false)
   const [mobileView, setMobileView] = useState<"main" | "profile" | "categories">("main")
+  const [desktopLoggingOut, setDesktopLoggingOut] = useState(false)
   const dashboardHref = getDashboardHref(user?.role)
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
+  const dropdownRef = React.useRef<ProfileDropdownHandle>(null)
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8)
@@ -111,16 +114,54 @@ export default function NavbarClient({ user, categories = [], leftSlot }: Profil
     startTransition(async () => {
       try {
         await logout()
+        toast.success("Logout successfully")
         router.refresh()
         router.push("/")
       } catch (error) {
         console.error("Logout failed:", error)
+        toast.error("Logout failed")
       } finally {
         setOpen(false)
         setMobileView("main")
       }
     })
   }
+
+  const handleDesktopLogout = () => {
+    // Close the dropdown first so the menu disappears before the overlay fades in.
+    // Wrapping in requestAnimationFrame avoids React batching the close with the
+    // overlay mount, which used to leave the menu briefly visible on top of the
+    // overlay during navigation.
+    requestAnimationFrame(() => {
+      dropdownRef.current?.closeMenu()
+      setDesktopLoggingOut(true)
+    })
+    startTransition(async () => {
+      try {
+        await logout()
+        toast.success("Logout successfully")
+        // Refresh server data, then push to home. Keep the overlay visible
+        // through both — the `pathname` effect below dismisses it once the
+        // home page is the active route, so the user never sees the old
+        // dashboard flicker back in.
+        router.refresh()
+        router.push("/")
+      } catch (error) {
+        console.error("Logout failed:", error)
+        toast.error("Logout failed")
+        setDesktopLoggingOut(false)
+      }
+    })
+  }
+
+  // Dismiss the logout overlay only once the navigation has actually landed on
+  // the home route. This keeps the spinner up through any RSC refresh + push
+  // so the previous authenticated page never flashes behind it.
+  useEffect(() => {
+    if (desktopLoggingOut && pathname === "/") {
+      setDesktopLoggingOut(false)
+    }
+  }, [desktopLoggingOut, pathname])
 
   return (
     <header className="fixed inset-x-0 top-0 z-50">
@@ -206,18 +247,17 @@ export default function NavbarClient({ user, categories = [], leftSlot }: Profil
   <ModeToggle />
 
         {user ? (
-          <ProfileDropdown user={user} />
+          <ProfileDropdown
+            ref={dropdownRef}
+            user={user}
+            onLogout={handleDesktopLogout}
+            disabled={desktopLoggingOut}
+          />
         ) : (
           <Button asChild>
             <Link href="/login">Sign in</Link>
           </Button>
         )}
-
-        <Button size="lg" asChild>
-          <Link href="#">
-            List your gear
-          </Link>
-        </Button>
       </div>
 
           {/* Mobile actions */}
@@ -331,11 +371,17 @@ export default function NavbarClient({ user, categories = [], leftSlot }: Profil
                     </button>
 
                     <div className="mt-2 flex flex-col gap-2 border-t border-border/60 pt-3">
-                      <Button size="lg" asChild className="rounded-xl">
-                        <Link href="#" onClick={closeMobile}>
-                          List your gear
-                        </Link>
-                      </Button>
+                      {user ? (
+                        <button
+                          type="button"
+                          onClick={handleMobileLogout}
+                          disabled={isPending}
+                          className="flex items-center justify-center gap-2 rounded-xl bg-red-500/10 px-3 py-3 text-base font-semibold text-red-500 transition-colors hover:bg-red-500/20 disabled:opacity-60"
+                        >
+                          <LogOut className="size-4" />
+                          {isPending ? "Logging out..." : "Logout"}
+                        </button>
+                      ) : null}
                     </div>
                   </motion.nav>
                 )}
@@ -467,6 +513,33 @@ export default function NavbarClient({ user, categories = [], leftSlot }: Profil
             </motion.div>
           </motion.div>
         )}
+      </AnimatePresence>
+
+      {/* Desktop logout: full-page loading overlay */}
+      <AnimatePresence>
+        {desktopLoggingOut ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm"
+            role="status"
+            aria-live="polite"
+            aria-label="Logging out"
+          >
+            <div className="relative size-16">
+              <span className="absolute inset-0 animate-ping rounded-full bg-emerald-400/30" />
+              <span className="absolute inset-2 animate-pulse rounded-full bg-emerald-500/40" />
+              <span className="absolute inset-4 flex items-center justify-center rounded-full bg-emerald-500 text-white shadow-lg shadow-emerald-500/30">
+                <span className="size-3 animate-pulse rounded-full bg-white" />
+              </span>
+            </div>
+            <p className="mt-6 text-sm font-medium uppercase tracking-[0.32em] text-emerald-600/80 dark:text-emerald-400/80">
+              Logging out
+            </p>
+          </motion.div>
+        ) : null}
       </AnimatePresence>
     </header>
   )

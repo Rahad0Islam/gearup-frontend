@@ -182,7 +182,7 @@ export function GearCard({
             className="w-full rounded-xl"
            onClick={() => router.push(`/gear/${gear.id}`)}
           >
-            <Eye className="size-4" aria-hidden="true" />
+            <Eye className="size-3" aria-hidden="true" />
             View Details
           </Button>
           <motion.div whileTap={{ scale: 0.96 }} className="w-full">
@@ -192,7 +192,7 @@ export function GearCard({
              onClick={() => router.push(`/gear/${gear.id}`)}
             >
               Rent Now
-              <ArrowRight className="size-4" aria-hidden="true" />
+              <ArrowRight className="size-3" aria-hidden="true" />
             </Button>
           </motion.div>
         </CardFooter>

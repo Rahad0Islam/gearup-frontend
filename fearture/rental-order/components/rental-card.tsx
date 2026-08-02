@@ -293,6 +293,7 @@ console.log("Gear Item ID:", gearItemId, "Customer ID:", customerId, "Order Stat
         gearName={gear?.name || "Equipment"}
         existingReview={review}
         onSuccess={(updatedReview) => setReview(updatedReview)}
+        onDeleted={() => setReview(null)}
       />
     </>
   )

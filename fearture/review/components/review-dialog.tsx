@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useTransition } from "react"
-import { Star, Loader2 } from "lucide-react"
+import { Star, Loader2, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
 import {
@@ -18,6 +18,7 @@ import { Textarea } from "@/components/ui/textarea"
 import {
   createReviewAction,
   updateReviewAction,
+  deleteReviewAction,
   type ReviewData,
 } from "@/fearture/review/action/review.action"
 
@@ -28,6 +29,11 @@ interface ReviewDialogProps {
   gearName: string
   existingReview?: ReviewData | null
   onSuccess?: (review: ReviewData) => void
+  /**
+   * Called when a review is successfully deleted. The parent should clear
+   * its local review state so the UI reflects the deletion immediately.
+   */
+  onDeleted?: (reviewId: string) => void
 }
 
 export function ReviewDialog({
@@ -37,6 +43,7 @@ export function ReviewDialog({
   gearName,
   existingReview,
   onSuccess,
+  onDeleted,
 }: ReviewDialogProps) {
   const isEditMode = Boolean(existingReview?.id)
 
@@ -44,6 +51,8 @@ export function ReviewDialog({
   const [hoveredRating, setHoveredRating] = useState<number | null>(null)
   const [comment, setComment] = useState<string>("")
   const [isPending, startTransition] = useTransition()
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
 
   // Populate fields if in Edit mode
   useEffect(() => {
@@ -54,6 +63,8 @@ export function ReviewDialog({
       setRating(5)
       setComment("")
     }
+    // Reset transient UI when the dialog opens/closes or the review changes
+    setConfirmingDelete(false)
   }, [existingReview, open])
 
   const handleSubmit = () => {
@@ -88,6 +99,29 @@ export function ReviewDialog({
           toast.error(res.message)
         }
       }
+    })
+  }
+
+  const handleDelete = () => {
+    if (!existingReview?.id) return
+
+    if (!confirmingDelete) {
+      setConfirmingDelete(true)
+      return
+    }
+
+    setIsDeleting(true)
+    startTransition(async () => {
+      const res = await deleteReviewAction(existingReview.id)
+      if (res.success) {
+        toast.success(res.message || "Review deleted successfully")
+        onDeleted?.(existingReview.id)
+        onOpenChange(false)
+      } else {
+        toast.error(res.message || "Failed to delete review")
+      }
+      setIsDeleting(false)
+      setConfirmingDelete(false)
     })
   }
 
@@ -152,11 +186,42 @@ export function ReviewDialog({
           </div>
         </div>
 
-        <DialogFooter className="flex sm:flex-row gap-2">
+        <DialogFooter className="flex flex-col-reverse sm:flex-row gap-2">
+          {isEditMode ? (
+            <Button
+              type="button"
+              variant="outline"
+              disabled={isPending || isDeleting}
+              onClick={handleDelete}
+              className={`rounded-xl text-xs sm:mr-auto border ${
+                confirmingDelete
+                  ? "border-red-500 bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-500/20"
+                  : "border-red-500/30 bg-red-500/5 text-red-600 dark:text-red-400 hover:bg-red-500/10 hover:border-red-500/50"
+              }`}
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="size-3.5 animate-spin mr-1.5" />
+                  Deleting...
+                </>
+              ) : confirmingDelete ? (
+                <>
+                  <Trash2 className="size-3.5 mr-1.5" />
+                  Tap again to confirm
+                </>
+              ) : (
+                <>
+                  <Trash2 className="size-3.5 mr-1.5" />
+                  Delete
+                </>
+              )}
+            </Button>
+          ) : null}
+
           <Button
             type="button"
             variant="outline"
-            disabled={isPending}
+            disabled={isPending || isDeleting}
             onClick={() => onOpenChange(false)}
             className="rounded-xl text-xs flex-1 border-slate-200 dark:border-slate-800"
           >
@@ -164,7 +229,7 @@ export function ReviewDialog({
           </Button>
           <Button
             type="button"
-            disabled={isPending}
+            disabled={isPending || isDeleting}
             onClick={handleSubmit}
             className="rounded-xl text-xs flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
           >

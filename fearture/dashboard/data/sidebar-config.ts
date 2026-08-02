@@ -97,11 +97,6 @@ export const SIDEBAR_ITEMS = {
       icon: PackageCheck,
       description: "Manage item listings and orders",
     },
-    {
-      title: "System Logs",
-      route: "/admin-dashboard/logs",
-      icon: ShieldAlert,
-      description: "Security and system audit logs",
-    },
+  
   ],
 }
