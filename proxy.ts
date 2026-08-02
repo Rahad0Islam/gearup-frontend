@@ -15,6 +15,8 @@ const AUTH_ROUTES = [
 const PublicRoutes = [
     '/',
     '/gear',
+    '/about',
+    '/how-it-works'
    
 ]
 export async function proxy(request: NextRequest) {
