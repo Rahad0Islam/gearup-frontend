@@ -5,7 +5,18 @@ import { useState } from "react"
 
 import * as React from "react"
 import Link from "next/link"
-import { Menu, X } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { useTransition } from "react"
+import {
+  Menu,
+  X,
+  ChevronDown,
+  ChevronRight,
+  LayoutDashboard,
+  User,
+  LogOut,
+  Compass,
+} from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
 
 import { cn } from "@/lib/utils"
@@ -18,10 +29,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 import { ModeToggle } from "@/components/mode-toggle"
 import { Logo } from "./logo"
 import { useEffect } from "react"
+import logout from "@/app/(authGroup)/_actions/logOut"
 import ProfileDropdown from "./profileComponents"
 
 type NavbarCategory = {
@@ -53,7 +66,10 @@ function getDashboardHref(role?: string) {
 export default function NavbarClient({ user, categories = [] }: ProfileDropdownProps) {
      const [scrolled, setScrolled] = useState(false)
   const [open, setOpen] = useState(false)
+  const [mobileView, setMobileView] = useState<"main" | "profile" | "categories">("main")
   const dashboardHref = getDashboardHref(user?.role)
+  const router = useRouter()
+  const [isPending, startTransition] = useTransition()
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8)
@@ -69,6 +85,30 @@ export default function NavbarClient({ user, categories = [] }: ProfileDropdownP
       document.body.style.overflow = ""
     }
   }, [open])
+
+  // Reset to main view whenever the panel closes
+  useEffect(() => {
+    if (!open) setMobileView("main")
+  }, [open])
+
+  const closeMobile = () => {
+    setOpen(false)
+  }
+
+  const handleMobileLogout = () => {
+    startTransition(async () => {
+      try {
+        await logout()
+        router.refresh()
+        router.push("/")
+      } catch (error) {
+        console.error("Logout failed:", error)
+      } finally {
+        setOpen(false)
+        setMobileView("main")
+      }
+    })
+  }
 
   return (
     <header className="fixed inset-x-0 top-0 z-50">
@@ -188,7 +228,7 @@ export default function NavbarClient({ user, categories = [] }: ProfileDropdownP
           >
             <div
               className="absolute inset-0 bg-background/60 backdrop-blur-sm"
-              onClick={() => setOpen(false)}
+              onClick={closeMobile}
               aria-hidden="true"
             />
             <motion.div
@@ -196,67 +236,214 @@ export default function NavbarClient({ user, categories = [] }: ProfileDropdownP
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -12 }}
               transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-              className="absolute inset-x-4 top-20 rounded-2xl border border-border/60 bg-card/95 p-4 shadow-2xl shadow-black/10 backdrop-blur-xl"
+              className="absolute inset-x-4 top-20 max-h-[calc(100vh-6rem)] overflow-hidden rounded-2xl border border-border/60 bg-card/95 p-4 shadow-2xl shadow-black/10 backdrop-blur-xl"
             >
-              <nav className="flex flex-col" aria-label="Mobile">
-                {NAV_LINKS.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    onClick={() => setOpen(false)}
-                    className="rounded-xl px-3 py-3 text-base font-medium text-foreground/90 transition-colors hover:bg-accent hover:text-accent-foreground"
+              <AnimatePresence mode="wait" initial={false}>
+                {mobileView === "main" && (
+                  <motion.nav
+                    key="main"
+                    initial={{ opacity: 0, x: -12 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -12 }}
+                    transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+                    className="flex flex-col gap-1 overflow-y-auto"
+                    aria-label="Mobile"
                   >
-                    {link.label}
-                  </Link>
-                ))}
-                {user ? (
-                  <Link
-                    href={dashboardHref}
-                    onClick={() => setOpen(false)}
-                    className="rounded-xl px-3 py-3 text-base font-medium text-foreground/90 transition-colors hover:bg-accent hover:text-accent-foreground"
-                  >
-                    Dashboard
-                  </Link>
-                ) : null}
-                <div className="rounded-xl border border-border/60 bg-background/50 p-2">
-                  <p className="px-2 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                    Categories
-                  </p>
-                  <Link
-                    href="/gear"
-                    onClick={() => setOpen(false)}
-                    className="block rounded-lg px-3 py-2 text-sm font-medium text-foreground/90 transition-colors hover:bg-accent hover:text-accent-foreground"
-                  >
-                    All gear
-                  </Link>
-                  {categories.length > 0 ? (
-                    categories.map((category) => (
-                      <Link
-                        key={category.id}
-                        href={`/gear/category/${category.id}`}
-                        onClick={() => setOpen(false)}
-                        className="block rounded-lg px-3 py-2 text-sm font-medium text-foreground/90 transition-colors hover:bg-accent hover:text-accent-foreground"
+                    {/* Profile entry (signed-in only) */}
+                    {user ? (
+                      <button
+                        type="button"
+                        onClick={() => setMobileView("profile")}
+                        className="flex items-center gap-3 rounded-xl border border-border/60 bg-background/60 px-3 py-3 text-left transition-colors hover:bg-accent"
                       >
-                        {category.name}
+                        <Avatar className="size-9">
+                          <AvatarImage
+                            src={user.image || ""}
+                            alt={user.name || "User"}
+                          />
+                          <AvatarFallback>
+                            {user.name?.charAt(0).toUpperCase() || "U"}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="flex-1 truncate text-sm font-semibold text-foreground">
+                          {user.name || "User"}
+                        </span>
+                        <ChevronRight className="size-4 text-muted-foreground" />
+                      </button>
+                    ) : (
+                      <Button asChild className="rounded-xl">
+                        <Link href="/login" onClick={closeMobile}>
+                          Sign in
+                        </Link>
+                      </Button>
+                    )}
+
+                    {NAV_LINKS.map((link) => (
+                      <Link
+                        key={link.href}
+                        href={link.href}
+                        onClick={closeMobile}
+                        className="rounded-xl px-3 py-3 text-base font-medium text-foreground/90 transition-colors hover:bg-accent hover:text-accent-foreground"
+                      >
+                        {link.label}
                       </Link>
-                    ))
-                  ) : (
-                    <p className="px-3 py-2 text-sm text-muted-foreground">No categories found</p>
-                  )}
-                </div>
-              </nav>
-              <div className="mt-3 flex flex-col gap-2 border-t border-border/60 pt-3">
-                <Button asChild>
-              <Link href="/login">
-                Sign in
-              </Link>
-            </Button>
-                <Button size="lg" asChild>
-              <Link href="#">
-                List your gear
-              </Link>
-            </Button>
-              </div>
+                    ))}
+
+                    {user ? (
+                      <Link
+                        href={dashboardHref}
+                        onClick={closeMobile}
+                        className="rounded-xl px-3 py-3 text-base font-medium text-foreground/90 transition-colors hover:bg-accent hover:text-accent-foreground"
+                      >
+                        Dashboard
+                      </Link>
+                    ) : null}
+
+                    <button
+                      type="button"
+                      onClick={() => setMobileView("categories")}
+                      className="flex items-center justify-between rounded-xl border border-border/60 bg-background/60 px-3 py-3 text-left transition-colors hover:bg-accent"
+                    >
+                      <span className="text-base font-medium text-foreground/90">
+                        Categories
+                      </span>
+                      <ChevronRight className="size-4 text-muted-foreground" />
+                    </button>
+
+                    <div className="mt-2 flex flex-col gap-2 border-t border-border/60 pt-3">
+                      <Button size="lg" asChild className="rounded-xl">
+                        <Link href="#" onClick={closeMobile}>
+                          List your gear
+                        </Link>
+                      </Button>
+                    </div>
+                  </motion.nav>
+                )}
+
+                {mobileView === "profile" && user ? (
+                  <motion.div
+                    key="profile"
+                    initial={{ opacity: 0, x: 12 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 12 }}
+                    transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+                    className="flex flex-col gap-1 overflow-y-auto"
+                    aria-label="Mobile profile"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setMobileView("main")}
+                      className="mb-2 flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                    >
+                      <ChevronDown className="size-4 rotate-90" />
+                      Back
+                    </button>
+
+                    <div className="flex items-center gap-3 rounded-xl border border-border/60 bg-background/60 p-3">
+                      <Avatar className="size-12">
+                        <AvatarImage
+                          src={user.image || ""}
+                          alt={user.name || "User"}
+                        />
+                        <AvatarFallback>
+                          {user.name?.charAt(0).toUpperCase() || "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-base font-semibold text-foreground">
+                          {user.name || "User"}
+                        </p>
+                        <p className="truncate text-xs text-muted-foreground">
+                          {user.role
+                            ? user.role.charAt(0) + user.role.slice(1).toLowerCase()
+                            : "Member"}
+                        </p>
+                      </div>
+                    </div>
+
+                    <Link
+                      href={dashboardHref}
+                      onClick={closeMobile}
+                      className="flex items-center gap-3 rounded-xl px-3 py-3 text-base font-medium text-foreground/90 transition-colors hover:bg-accent hover:text-accent-foreground"
+                    >
+                      <LayoutDashboard className="size-4 text-muted-foreground" />
+                      Dashboard
+                    </Link>
+
+                    <Link
+                      href="/profile"
+                      onClick={closeMobile}
+                      className="flex items-center gap-3 rounded-xl px-3 py-3 text-base font-medium text-foreground/90 transition-colors hover:bg-accent hover:text-accent-foreground"
+                    >
+                      <User className="size-4 text-muted-foreground" />
+                      Profile
+                    </Link>
+
+                    <button
+                      type="button"
+                      onClick={handleMobileLogout}
+                      disabled={isPending}
+                      className="flex items-center gap-3 rounded-xl px-3 py-3 text-left text-base font-medium text-red-500 transition-colors hover:bg-red-500/10 disabled:opacity-60"
+                    >
+                      <LogOut className="size-4" />
+                      {isPending ? "Logging out..." : "Logout"}
+                    </button>
+                  </motion.div>
+                ) : null}
+
+                {mobileView === "categories" ? (
+                  <motion.div
+                    key="categories"
+                    initial={{ opacity: 0, x: 12 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 12 }}
+                    transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+                    className="flex flex-col gap-1 overflow-y-auto"
+                    aria-label="Mobile categories"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setMobileView("main")}
+                      className="mb-2 flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                    >
+                      <ChevronDown className="size-4 rotate-90" />
+                      Back
+                    </button>
+
+                    <p className="px-3 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                      Browse categories
+                    </p>
+
+                    <Link
+                      href="/gear"
+                      onClick={closeMobile}
+                      className="flex items-center justify-between rounded-xl px-3 py-3 text-base font-medium text-foreground/90 transition-colors hover:bg-accent hover:text-accent-foreground"
+                    >
+                      All gear
+                      <ChevronRight className="size-4 text-muted-foreground" />
+                    </Link>
+
+                    {categories.length > 0 ? (
+                      categories.map((category) => (
+                        <Link
+                          key={category.id}
+                          href={`/gear/category/${category.id}`}
+                          onClick={closeMobile}
+                          className="flex items-center justify-between rounded-xl px-3 py-3 text-base font-medium text-foreground/90 transition-colors hover:bg-accent hover:text-accent-foreground"
+                        >
+                          {category.name}
+                          <ChevronRight className="size-4 text-muted-foreground" />
+                        </Link>
+                      ))
+                    ) : (
+                      <p className="flex items-center gap-2 rounded-xl px-3 py-3 text-sm text-muted-foreground">
+                        <Compass className="size-4" />
+                        No categories found
+                      </p>
+                    )}
+                  </motion.div>
+                ) : null}
+              </AnimatePresence>
             </motion.div>
           </motion.div>
         )}
