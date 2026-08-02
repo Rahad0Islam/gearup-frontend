@@ -142,7 +142,7 @@ export function GearDetails({
         router.push("/customer-dashboard/rental")
       } else {
         console.log("this is bug",res.message );
-        if(res.message !== "Pickup date cannot be in the past."){
+        if(res.message === "user not logged in") {
           router.push("/login?redirectTo=/gear/" + gear.id)
         }
         setErrorMsg(res.message || "Failed to create rental order. Please try again.")

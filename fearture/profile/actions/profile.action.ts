@@ -31,14 +31,6 @@ async function getAuthHeader() {
   }
 }
 
-/**
- * Fetch the current user's profile from the backend.
- *
- * The backend only exposes a read endpoint (`GET /auth/me`); there is no
- * update or delete route. This action is therefore a thin pass-through
- * to the existing `getme` flow, kept here so the profile page does not
- * reach into another feature's actions.
- */
 export async function getProfileAction(): Promise<ProfileResult> {
   try {
     const res = await fetch(`${BASE_URL}/api/v1/auth/me`, {
