@@ -4,8 +4,34 @@ import { getAllGear } from "@/fearture/gear/_actions/gear.action"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Logo } from "@/components/logo"
+import { Search, CalendarCheck, PackageCheck } from "lucide-react"
+import getCurrentUser from "@/app/(authGroup)/_actions/getCurrentUser"
 
 type SearchParams = Record<string, string | string[] | undefined>
+
+const HOW_IT_WORKS = [
+  {
+    icon: Search,
+    step: "01",
+    title: "Browse the catalog",
+    description:
+      "Search and filter gear by category, brand, or daily price. Every item shows real-time availability and reviews from past renters.",
+  },
+  {
+    icon: CalendarCheck,
+    step: "02",
+    title: "Book your dates",
+    description:
+      "Pick a pickup and return date, add items to your rental cart, and pay securely with Stripe. Providers confirm your order instantly.",
+  },
+  {
+    icon: PackageCheck,
+    step: "03",
+    title: "Pick up & return",
+    description:
+      "Collect your gear on the chosen date, use it for the rental period, then drop it back. Late returns are auto-calculated as a small late fee.",
+  },
+]
 
 function firstValue(value: string | string[] | undefined) {
   if (Array.isArray(value)) return value[0]
@@ -40,8 +66,10 @@ export default async function Page({
     brand: firstValue(resolvedSearchParams.brand)?.trim(),
   }
   const gearsResult = await getAllGear(query)
+  const userResult = await getCurrentUser()
   const items = Array.isArray(gearsResult?.data) ? gearsResult.data : []
   const meta = gearsResult?.meta || { page: query.page, limit: query.limit, total: items.length, totalPage: 1 }
+  const user = userResult?.data || null
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,rgba(16,185,129,0.12),transparent_28%),radial-gradient(circle_at_left_top,rgba(14,165,233,0.08),transparent_24%),linear-gradient(to_bottom,rgba(255,255,255,0.9),rgba(248,250,252,1))] dark:bg-[radial-gradient(circle_at_top_right,rgba(16,185,129,0.12),transparent_28%),radial-gradient(circle_at_left_top,rgba(14,165,233,0.08),transparent_24%),linear-gradient(to_bottom,rgba(2,6,23,0.95),rgba(2,6,23,1))]">
@@ -117,6 +145,66 @@ export default async function Page({
           </div>
         </aside>
       </main>
+      {/* How it works */}
+      <section
+        id="how-it-works"
+        className="mx-auto max-w-7xl scroll-mt-28 px-4 pb-16 sm:px-6 lg:px-8"
+        aria-labelledby="how-it-works-heading"
+      >
+        <div className="flex flex-col items-center gap-3 text-center">
+          <p className="text-xs font-medium uppercase tracking-[0.24em] text-primary">
+            How it works
+          </p>
+          <h2
+            id="how-it-works-heading"
+            className="text-balance text-3xl font-semibold tracking-tight text-foreground sm:text-4xl"
+          >
+            Three simple steps from browse to return
+          </h2>
+          <p className="max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
+            GearUp keeps the rental flow tight: discover what you need, lock in your dates with secure checkout,
+            and pick up the gear from a verified provider near you.
+          </p>
+        </div>
+
+        <ol className="mt-10 grid gap-4 md:grid-cols-3">
+          {HOW_IT_WORKS.map(({ icon: Icon, step, title, description }) => (
+            <li
+              key={step}
+              className="group relative flex flex-col gap-4 rounded-2xl border border-border/60 bg-card/60 p-6 shadow-sm backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5 dark:bg-card/40"
+            >
+              <div className="flex items-center justify-between">
+                <span className="inline-flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/20 transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+                  <Icon className="size-5" aria-hidden="true" />
+                </span>
+                <span className="text-xs font-semibold uppercase tracking-[0.24em] text-muted-foreground">
+                  Step {step}
+                </span>
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold tracking-tight text-foreground">
+                  {title}
+                </h3>
+                <p className="text-sm leading-6 text-muted-foreground">
+                  {description}
+                </p>
+              </div>
+            </li>
+          ))}
+        </ol>
+
+        <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
+          <Button asChild size="lg" className="rounded-full px-6">
+            <Link href="/gear">Browse gear</Link>
+          </Button>
+          {!user && (
+            <Button asChild variant="outline" size="lg" className="rounded-full px-6">
+              <Link href="/register">Create an account</Link>
+            </Button>
+          )}
+        </div>
+      </section>
+
       <section id="gear-catalog" className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
       <GearListingView initialItems={items} initialMeta={meta} initialQuery={query} />
       </section>
