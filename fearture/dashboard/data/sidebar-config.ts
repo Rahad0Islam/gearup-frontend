@@ -5,6 +5,7 @@ import {
   Star,
   Users,
   ShieldAlert,
+  UserCircle,
 } from "lucide-react"
 
 export const SIDEBAR_ITEMS = {
@@ -33,6 +34,12 @@ export const SIDEBAR_ITEMS = {
       icon: Star,
       description: "Manage your reviews",
     },
+    {
+      title: "Profile",
+      route: "/profile",
+      icon: UserCircle,
+      description: "Update your account details",
+    },
   ],
   PROVIDER: [
     {
@@ -58,6 +65,12 @@ export const SIDEBAR_ITEMS = {
       route: "/provider-dashboard/gear/create",
       icon: Star,
       description: "Create and manage your gear listings",
+    },
+    {
+      title: "Profile",
+      route: "/profile",
+      icon: UserCircle,
+      description: "Update your account details",
     },
   ],
   ADMIN: [
@@ -96,6 +109,12 @@ export const SIDEBAR_ITEMS = {
       route: "/admin-dashboard/rentals",
       icon: PackageCheck,
       description: "Manage item listings and orders",
+    },
+    {
+      title: "Profile",
+      route: "/profile",
+      icon: UserCircle,
+      description: "Update your account details",
     },
   
   ],
