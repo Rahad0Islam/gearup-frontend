@@ -141,7 +141,7 @@ export function GearDetails({
         // Direct to Customer Dashboard Rentals page
         router.push("/customer-dashboard/rental")
       } else {
-        console.log("this is bug",res.message );
+        // console.log("this is bug",res.message );
         if(res.message === "user not logged in") {
           router.push("/login?redirectTo=/gear/" + gear.id)
         }
