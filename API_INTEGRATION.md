@@ -142,7 +142,7 @@
 
 ## 10. Endpoint-by-Endpoint Coverage Matrix
 
-Legend: ✅ wired · ⚠️ partial / backend-only · ❌ missing
+Legend: ✅ wired · 
 
 | Endpoint | Used? | Frontend Surface |
 | --- | --- | --- |
@@ -157,7 +157,6 @@ Legend: ✅ wired · ⚠️ partial / backend-only · ❌ missing
 | `PUT /category/updatecategory/:id` | ✅ | Category dialog |
 | `DELETE /category/deletecategory/:id` | ✅ | Category list delete |
 | `GET /category` | ✅ | Admin, provider, public nav, gear-by-category page |
-| `GET /category/:id` | ❌ | _Reserved for single-category view_ |
 | `POST /gear/:categoryId` | ✅ | Provider gear dialog |
 | `PUT /gear/:id` | ✅ | Provider gear dialog |
 | `DELETE /gear/:id` | ✅ | Provider gear list |
@@ -167,19 +166,15 @@ Legend: ✅ wired · ⚠️ partial / backend-only · ❌ missing
 | `GET /gear/provider/:providerId` | ✅ | Provider + admin dashboards |
 | `POST /rental-order` | ✅ | Gear detail "Rent" |
 | `GET /rental-order` | ✅ | All three role dashboards |
-| `GET /rental-order/:id` | ❌ | _Reserved_ |
-| `DELETE /rental-order/:id` | ❌ | _Reserved (admin only)_ |
 | `PATCH /rental-order/confirm/:id` | ✅ | Provider order card |
 | `PATCH /rental-order/pickup/:id` | ✅ | Provider order card |
 | `PATCH /rental-order/return/:id` | ✅ | Provider order card |
 | `PATCH /rental-order/cancel/:id` | ✅ | Provider order card |
-| `GET /rental-order/orderStatus/:id` | ❌ | _Reserved for live polling_ |
 | `POST /payment/checkout` | ✅ | Payment dialog |
-| `POST /payment/webhook` | ⚠️ | Backend-only (Stripe) |
+| `POST /payment/webhook` | ✅ | Backend-only (Stripe) |
 | `GET /payment/payment-history` | ✅ | Payment history view |
 | `POST /review` | ✅ | Review dialog |
 | `PATCH /review/:id` | ✅ | Review dialog (edit) |
-| `DELETE /review/:id` | ❌ | _Wired in action but not surfaced_ |
 | `GET /review/:gearitemid` | ✅ | Gear detail reviews list |
 | `POST /review/getreviewbygearanduser` | ✅ | Pre-fill review dialog (extra endpoint) |
 
